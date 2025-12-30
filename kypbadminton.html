@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>羽球抽籤排場(手機優化版)</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --light: #f8f9fa; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #eee; margin: 0; padding: 10px; font-size: 14px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; font-size: 1.5rem; margin-bottom: 15px; }
+        
+        /* 輸入區摺疊 */
+        details { background: var(--light); padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ddd; }
+        summary { font-weight: bold; cursor: pointer; color: var(--accent); }
+
+        textarea { width: 100%; height: 80px; margin-top: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .form-group { flex: 1; min-width: 120px; }
+        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+
+        /* 按鈕區 */
+        .btn-group { display: flex; gap: 8px; margin: 15px 0; }
+        button { flex: 1; padding: 12px 5px; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; color: white; }
+        .btn-start { background: var(--accent); }
+        .btn-next { background: var(--success); }
+        .btn-reset { background: var(--danger); font-size: 0.8rem; flex: 0.5; }
+
+        /* 場地顯示卡片 */
+        .court-card { background: #e8f4fd; border-left: 5px solid var(--accent); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+        .court-title { font-weight: bold; color: var(--accent); margin-bottom: 8px; border-bottom: 1px solid #bcd; }
+        .match { display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .team { flex: 1; display: flex; flex-direction: column; text-align: center; }
+        .vs { padding: 0 15px; color: #888; font-style: italic; font-weight: normal; }
+
+        /* 休息與統計 */
+        .rest-area { background: #fff3e0; border-radius: 6px; padding: 10px; margin-bottom: 15px; border: 1px solid #ffe0b2; }
+        .tag { display: inline-block; background: #fb8c00; color: white; padding: 2px 8px; border-radius: 12px; margin: 2px; font-size: 0.85rem; }
+        
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { border: 1px solid #ddd; padding: 8px 4px; text-align: center; }
+        th { background: #f2f2f2; }
+        .active-row { background: #e8f5e9; font-weight: bold; }
+        .must-tag { color: red; font-size: 0.7rem; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏸 羽球排場 (手機版)</h1>
+
+    <details open>
+        <summary>⚙️ 設定名單與參數</summary>
+        <div class="form-group">
+            <label>球員名單 (每行一人)</label>
+            <textarea id="playerList">小明
+小華
+阿強
+大偉
+阿珍
+小芳
+志明
+春嬌
+阿龍
+小傑
+阿輝
+小玲
+阿光</textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>場地數</label><input type="number" id="cNum" value="2"></div>
+            <div class="form-group"><label>必上門檻R</label><input type="number" id="rLimit" value="2"></div>
+        </div>
+    </details>
+
+    <div class="btn-group">
+        <button class="btn-start" onclick="init()">初始化</button>
+        <button class="btn-next" id="nextBtn" onclick="draw()" disabled>下一局</button>
+        <button class="btn-reset" onclick="location.reload()">重置</button>
+    </div>
+
+    <div id="displayArea" style="display:none;">
+        <h2 id="roundInfo" style="text-align:center; margin:10px 0;"></h2>
+        <div id="courts"></div>
+        <div class="rest-area" id="restPlayers"></div>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>球員</th><th>場次</th><th>休</th><th>狀態</th></tr>
+                </thead>
+                <tbody id="stats"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let players = [];
+    let round = 0;
+
+    function init() {
+        const input = document.getElementById('playerList').value.trim();
+        if(!input) return alert("請輸入名單");
+        
+        players = input.split('\n').filter(n => n.trim()).map(n => ({
+            name: n.trim(), played: 0, rest: 0, on: false
+        }));
+
+        const cNum = parseInt(document.getElementById('cNum').value);
+        if(players.length < cNum * 4) return alert("人數不足");
+
+        round = 0;
+        document.getElementById('displayArea').style.display = 'block';
+        document.getElementById('nextBtn').disabled = false;
+        draw();
+    }
+
+    function draw() {
+        round++;
+        const cNum = parseInt(document.getElementById('cNum').value);
+        const rLimit = parseInt(document.getElementById('rLimit').value);
+        const need = cNum * 4;
+
+        // 計算權重與標記必上
+        const maxP = Math.max(...players.map(p => p.played));
+        players.forEach(p => {
+            p.weight = 1 + 2 * (maxP - p.played) + 1 * p.rest;
+        });
+
+        let must = players.filter(p => p.rest >= rLimit);
+        let others = players.filter(p => p.rest < rLimit);
+        
+        let selected = [];
+        if(must.length >= need) {
+            selected = must.sort(() => Math.random() - 0.5).slice(0, need);
+        } else {
+            selected = [...must];
+            for(let i = selected.length; i < need; i++) {
+                let totalW = others.reduce((s, p) => s + p.weight, 0);
+                let r = Math.random() * totalW;
+                let sum = 0;
+                for(let j = 0; j < others.length; j++) {
+                    sum += others[j].weight;
+                    if(r <= sum) {
+                        selected.push(others.splice(j, 1)[0]);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 更新狀態
+        const names = selected.map(s => s.name);
+        players.forEach(p => {
+            if(names.includes(p.name)) {
+                p.played++; p.rest = 0; p.on = true;
+            } else {
+                p.rest++; p.on = false;
+            }
+        });
+
+        render(selected, cNum);
+    }
+
+    function render(selected, cNum) {
+        document.getElementById('roundInfo').innerText = "第 " + round + " 局";
+        const courtDiv = document.getElementById('courts');
+        courtDiv.innerHTML = '';
+        const shuffled = selected.sort(() => Math.random() - 0.5);
+
+        for(let i = 0; i < cNum; i++) {
+            const p = shuffled.slice(i*4, i*4+4);
+            courtDiv.innerHTML += `
+                <div class="court-card">
+                    <div class="court-title">場地 ${i+1}</div>
+                    <div class="match">
+                        <div class="team"><span>${p[0].name}</span><span>${p[1].name}</span></div>
+                        <div class="vs">vs</div>
+                        <div class="team"><span>${p[2].name}</span><span>${p[3].name}</span></div>
+                    </div>
+                </div>`;
+        }
+
+        const rests = players.filter(p => !p.on);
+        document.getElementById('restPlayers').innerHTML = '<strong>☕ 休息：</strong>' + 
+            rests.map(p => `<span class="tag">${p.name}</span>`).join('');
+
+        const tbody = document.getElementById('stats');
+        tbody.innerHTML = '';
+        players.sort((a,b) => a.played - b.played).forEach(p => {
+            const rLimit = parseInt(document.getElementById('rLimit').value);
+            tbody.innerHTML += `
+                <tr class="${p.on ? 'active-row' : ''}">
+                    <td>${p.name}</td>
+                    <td>${p.played}</td>
+                    <td>${p.rest}</td>
+                    <td>${p.on ? '🏸上場' : (p.rest >= rLimit ? '<span class="must-tag">🔥必上</span>' : '休')}</td>
+                </tr>`;
+        });
+    }
+</script>
+</body>
+</html>
