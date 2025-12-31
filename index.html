@@ -1,490 +1,542 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>羽球抽籤分組</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>羽球排場系統 - 異步調度版</title>
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --light: #f8f9fa;
-        }
+      :root {
+        --primary: #2c3e50;
+        --accent: #3498db;
+        --success: #27ae60;
+        --danger: #e74c3c;
+        --light: #f8f9fa;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: #eee;
+        margin: 0;
+        padding: 10px;
+        font-size: 14px;
+        overflow-x: hidden;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #eee;
-            margin: 0;
-            padding: 10px;
-            font-size: 14px;
-        }
+      /* 輸入介面樣式 */
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 12px;
+        background: var(--light);
+        border-radius: 8px;
+        border: 1px dashed #ccc;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        align-items: center;
+      }
+      select,
+      input {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 16px;
+        background: white;
+      }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
+      /* 1. 優化返回按鈕：加大且更易點擊 */
+      .btn-back {
+        background: #95a5a6;
+        color: white;
+        border: none;
+        padding: 12px 15px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-        h1 {
-            text-align: center;
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-        }
+      .btn-add {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+        font-weight: bold;
+      }
 
-        /* 設定區與添加介面 */
-        details {
-            background: var(--light);
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-        }
+      /* 球員標籤樣式 */
+      .player-pool {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        min-height: 100px;
+        max-height: 180px;
+        overflow-y: auto;
+      }
+      .tag {
+        background: #f0f7ff;
+        border: 1px solid #d1e9ff;
+        padding: 6px 10px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.95rem;
+      }
+      .btn-del {
+        color: var(--danger);
+        background: none;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 1.2rem;
+      }
 
-        summary {
-            font-weight: bold;
-            cursor: pointer;
-            color: var(--accent);
-            margin-bottom: 5px;
-        }
+      /* 3. 設定區塊佈局優化 */
+      .setting-row {
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+      }
+      .setting-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .setting-group label {
+        font-weight: bold;
+        font-size: 0.9rem;
+        color: #555;
+      }
 
-        .add-player-ui {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 15px;
-            background: #fff;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px dashed #ccc;
-        }
+      /* 場地卡片樣式 */
+      .court-card {
+        background: #eef7ff;
+        border-left: 5px solid var(--accent);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #ddecff;
+      }
+      .court-header {
+        font-weight: bold;
+        color: var(--accent);
+        margin-bottom: 10px;
+        border-bottom: 1px solid #bcd;
+        padding-bottom: 5px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .match-display {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 10px;
+        text-align: center;
+        font-size: 1.1rem;
+        margin: 10px 0;
+      }
+      .scorer-info {
+        background: #fff;
+        border: 1px solid #eee;
+        padding: 5px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        text-align: center;
+        color: #555;
+      }
+      .btn-finish {
+        background: var(--success);
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 6px;
+        width: 100%;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
 
-        select,
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-
-        .btn-add {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        /* 球員標籤顯示區 */
-        .player-pool {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            background: #fff;
-            padding: 12px;
-            border: 2px inset #eee;
-            border-radius: 8px;
-            max-height: 200px;
-            /* 限制高度，避免撐開整個畫面 */
-            overflow-y: auto;
-            /* 過多時顯示捲軸 */
-        }
-
-        .player-tag {
-            background: #f0f7ff;
-            border: 1px solid #d1e9ff;
-            padding: 8px 12px;
-            /* 加大內距好點擊 */
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .btn-del {
-            color: #fff;
-            background: var(--danger);
-            /* 改用紅色背景增加辨識度 */
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            line-height: 1;
-            border: none;
-            cursor: pointer;
-        }
-
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .form-group {
-            flex: 1;
-            min-width: 120px;
-        }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        /* 按鈕區 */
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            margin: 15px 0;
-        }
-
-        button {
-            flex: 1;
-            padding: 12px 5px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            color: white;
-        }
-
-        .btn-start {
-            background: var(--accent);
-        }
-
-        .btn-next {
-            background: var(--success);
-        }
-
-        .btn-reset {
-            background: var(--danger);
-            font-size: 0.8rem;
-            flex: 0.5;
-        }
-
-        /* 場地與統計內容 */
-        .court-card {
-            background: #e8f4fd;
-            border-left: 5px solid var(--accent);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-
-        .court-title {
-            font-weight: bold;
-            color: var(--accent);
-            margin-bottom: 8px;
-            border-bottom: 1px solid #bcd;
-        }
-
-        .match {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-        }
-
-        .team {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .vs {
-            padding: 0 15px;
-            color: #888;
-            font-style: italic;
-            font-weight: normal;
-        }
-
-        .rest-area {
-            background: #fff3e0;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ffe0b2;
-        }
-
-        .tag {
-            display: inline-block;
-            background: #fb8c00;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin: 2px;
-            font-size: 0.85rem;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px 4px;
-            text-align: center;
-        }
-
-        th {
-            background: #f2f2f2;
-        }
-
-        .active-row {
-            background: #e8f5e9;
-            font-weight: bold;
-        }
-
-        .must-tag {
-            color: red;
-            font-size: 0.7rem;
-            display: block;
-        }
+      .rest-box {
+        background: #fff3e0;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ffe0b2;
+        margin-top: 20px;
+      }
+      .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+        margin-top: 10px;
+      }
+      .stats-table th,
+      .stats-table td {
+        border: 1px solid #ddd;
+        padding: 6px 2px;
+        text-align: center;
+      }
+      .status-on {
+        color: var(--success);
+        font-weight: bold;
+      }
+      .status-off {
+        color: #999;
+      }
+      .status-scoring {
+        color: #f39c12; /* 橘色 */
+        font-weight: bold;
+      }
     </style>
-</head>
-
-<body>
-
+  </head>
+  <body>
     <div class="container">
-        <h1>🏸 羽球排場</h1>
+      <h1 id="title">🏸 羽球排場系統</h1>
 
+      <div id="setupView">
         <details open>
-            <summary>👥 球員管理 (<span id="playerCount">0</span>人)</summary>
-
-            <div class="add-player-ui">
-                <select id="playerSelect" onchange="handleSelectChange(this)">
-                    <option value="">快速加入常用...</option>
-                    <option value="小甫">小甫</option>
-                    <option value="小甫友（魚丸）">小甫友（魚丸）</option>
-                    <option value="小甫友（老曹）">小甫友（老曹）</option>
-                    <option value="Richard">Richard</option>
-                    <option value="Sasha">Sasha</option>
-                    <option value="MOMO">MOMO</option>
-                    <option value="Nora">Nora</option>
-                    <option value="Bonnie">Bonnie</option>
-                    <option value="Apple">Apple</option>
-                    <option value="Vivian">Vivian</option>
-                    <option value="Nora(室友)">Nora(室友)</option>
-                    <option value="Sam">Sam</option>
-                    <option value="Reno">Reno</option>
-                    <option value="Sally">Sally</option>
-                    <option value="Chloe">Chloe</option>
-                    <option value="_custom_">其他人員</option>
-                </select>
-                <input type="text" id="customInput" placeholder="輸入姓名" style="display:none;">
-                <button class="btn-add" onclick="addPlayer()">加入</button>
+          <summary>👥 球員管理 (<span id="pCount">0</span>人)</summary>
+          <div class="input-group">
+            <div class="row">
+              <select id="pSelect" onchange="toggleCustom(this)">
+                <option value="">選擇人員...</option>
+                <option value="Apple">Apple</option>
+                <option value="Bonnie">Bonnie</option>
+                <option value="Chloe">Chloe</option>
+                <option value="Jamie">Jamie</option>
+                <option value="Momo">Momo</option>
+                <option value="Nora">Nora</option>
+                <option value="Reno">Reno</option>
+                <option value="Richard">Richard</option>
+                <option value="Sally">Sally</option>
+                <option value="Sam">Sam</option>
+                <option value="Sasha">Sasha</option>
+                <option value="Vivian">Vivian</option>
+                <option value="小甫">小甫</option>
+                <option value="小甫友（老曹）">小甫友（老曹）</option>
+                <option value="小甫友（魚丸）">小甫友（魚丸）</option>
+                <option value="_custom_">其他人員 (手動輸入)</option>
+              </select>
+              <input
+                type="text"
+                id="cInput"
+                placeholder="請輸入姓名"
+                style="display: none"
+              />
+              <button
+                id="backBtn"
+                class="btn-back"
+                style="display: none"
+                onclick="resetUI()"
+              >
+                ← 返回
+              </button>
             </div>
+            <button class="btn-add" onclick="addPlayer()">＋ 加入球員</button>
+          </div>
 
-            <div class="player-pool" id="playerPool"></div>
+          <div class="player-pool" id="pPool"></div>
 
-            <div class="form-row">
-                <div class="form-group"><label>場地數</label><input type="number" id="cNum" value="2"></div>
-                <div class="form-group"><label>最高休息場數</label><input type="number" id="rLimit" value="2"></div>
+          <div class="setting-row">
+            <div class="setting-group">
+              <label for="courtQty">場地數</label>
+              <input type="number" id="courtQty" value="2" min="1" />
             </div>
+            <div class="setting-group">
+              <label for="maxOn">最高連續上場次數</label>
+              <input type="number" id="maxOn" value="2" min="1" />
+            </div>
+          </div>
         </details>
+        <button
+          onclick="initSystem()"
+          style="
+            background: var(--accent);
+            width: 100%;
+            padding: 15px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 10px;
+          "
+        >
+          🚀 初始化並開始抽籤
+        </button>
+      </div>
 
-        <div class="btn-group">
-            <button class="btn-start" onclick="init()">開始/初始化</button>
-            <button class="btn-next" id="nextBtn" onclick="draw()" disabled>下一局</button>
-            <button class="btn-reset" onclick="location.reload()">重置</button>
+      <div id="mainView" style="display: none">
+        <div id="courtsArea"></div>
+
+        <div class="rest-box">
+          <strong>☕ 休息區 (依連休長短排序)：</strong>
+          <div id="waitingArea" style="margin-top: 8px"></div>
         </div>
 
-        <div id="displayArea" style="display:none;">
-            <h2 id="roundInfo" style="text-align:center; margin:10px 0;"></h2>
-            <div id="courts"></div>
-            <div class="rest-area" id="restPlayers"></div>
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>球員</th>
+              <th>已打</th>
+              <th>連上</th>
+              <th>連休</th>
+              <th>狀態</th>
+            </tr>
+          </thead>
+          <tbody id="pStats"></tbody>
+        </table>
 
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>球員</th>
-                            <th>場次</th>
-                            <th>休</th>
-                            <th>狀態</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stats"></tbody>
-                </table>
-            </div>
-        </div>
+        <button
+          onclick="location.reload()"
+          style="
+            background: var(--danger);
+            width: 100%;
+            padding: 10px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.8rem;
+          "
+        >
+          結束當前所有場次並重置
+        </button>
+      </div>
     </div>
 
     <script>
-        let playerNames = ["小甫", "Richard"]; // 預設初始名單
-        let players = [];
-        let round = 0;
+      let names = [
+        "小甫",
+        "Richard",
+        "Sasha",
+        "Momo",
+        "Nora",
+        "Bonnie",
+        "Apple",
+        "Vivian",
+        "Sam",
+        "Reno",
+        "Sally",
+        "Chloe",
+      ];
+      let players = [];
+      let courts = [];
 
-        // 初始化名單顯示
-        window.onload = () => renderPlayerPool();
+      window.onload = () => updatePool();
 
-        function handleSelectChange(sel) {
-            const customInput = document.getElementById('customInput');
-            if (sel.value === "_custom_") {
-                customInput.style.display = "block";
-            } else {
-                customInput.style.display = "none";
-            }
+      function toggleCustom(s) {
+        if (s.value === "_custom_") {
+          s.style.display = "none";
+          document.getElementById("cInput").style.display = "block";
+          document.getElementById("backBtn").style.display = "flex";
+          document.getElementById("cInput").focus();
+        }
+      }
+
+      function resetUI() {
+        const s = document.getElementById("pSelect");
+        s.style.display = "block";
+        s.value = "";
+        document.getElementById("cInput").style.display = "none";
+        document.getElementById("backBtn").style.display = "none";
+      }
+
+      function addPlayer() {
+        const sel = document.getElementById("pSelect");
+        const inp = document.getElementById("cInput");
+        let n = inp.style.display === "block" ? inp.value.trim() : sel.value;
+        if (n && !names.includes(n)) {
+          names.push(n);
+          if (inp.style.display === "block") inp.value = "";
+          updatePool();
+        }
+      }
+
+      function delPlayer(n) {
+        names = names.filter((i) => i !== n);
+        updatePool();
+      }
+
+      function updatePool() {
+        document.getElementById("pCount").innerText = names.length;
+        // 按照英文/中文排序
+        const sortedNames = [...names].sort((a, b) =>
+          a.localeCompare(b, "zh-Hans-TW")
+        );
+
+        document.getElementById("pPool").innerHTML = sortedNames
+          .map(
+            (n) => `
+            <div class="tag">${n}<button class="btn-del" onclick="delPlayer('${n}')">×</button></div>
+        `
+          )
+          .join("");
+      }
+
+      function initSystem() {
+        const cQty = parseInt(document.getElementById("courtQty").value);
+        if (names.length < cQty * 5)
+          return alert(`人數不足！${cQty}場需至少 ${cQty * 5} 人`);
+
+        players = names.map((n) => ({
+          name: n,
+          played: 0,
+          onStreak: 0,
+          restStreak: 0,
+          status: "idle",
+        }));
+        courts = Array.from({ length: cQty }, (_, i) => ({
+          id: i + 1,
+          users: [],
+        }));
+
+        document.getElementById("setupView").style.display = "none";
+        document.getElementById("mainView").style.display = "block";
+        document.getElementById("title").innerText = "🎾 比賽調度中";
+
+        courts.forEach((c) => drawCourt(c.id));
+        render();
+      }
+
+      function drawCourt(cId) {
+        const court = courts.find((c) => c.id === cId);
+        const maxOn = parseInt(document.getElementById("maxOn").value);
+
+        let available = players.filter(
+          (p) => p.status === "idle" && p.onStreak < maxOn
+        );
+        if (available.length < 5) {
+          available = players.filter((p) => p.status === "idle");
         }
 
-        function addPlayer() {
-            const sel = document.getElementById('playerSelect');
-            const customInp = document.getElementById('customInput');
-            let name = "";
+        available.sort(
+          (a, b) => b.restStreak - a.restStreak || a.played - b.played
+        );
 
-            if (sel.value === "_custom_") {
-                name = customInp.value.trim();
-            } else if (sel.value !== "") {
-                name = sel.value;
-            }
+        const selected = available.slice(0, 5);
+        if (selected.length < 5) return;
 
-            if (name && !playerNames.includes(name)) {
-                playerNames.push(name);
-                customInp.value = "";
-                renderPlayerPool();
-            } else if (playerNames.includes(name)) {
-                alert("球員已在名單中");
-            }
-        }
+        selected.forEach((p, index) => {
+          p.restStreak = 0;
+          if (index < 4) {
+            p.status = "playing"; // 球員狀態
+            p.played++;
+            p.onStreak++;
+          } else {
+            p.status = "scoring"; // 記分員狀態
+            // p.onStreak = 0; // 若希望記分員下一場優先打球，可解除此註解
+          }
+        });
 
-        function removePlayer(name) {
-            playerNames = playerNames.filter(n => n !== name);
-            renderPlayerPool();
-        }
+        court.users = selected;
+      }
 
-        function renderPlayerPool() {
-            const pool = document.getElementById('playerPool');
-            document.getElementById('playerCount').innerText = playerNames.length;
-            pool.innerHTML = playerNames.map(name => `
-            <div class="player-tag">
-                ${name}
-                <button class="btn-del" onclick="removePlayer('${name}')">×</button>
+      function finishCourt(cId) {
+        const court = courts.find((c) => c.id === cId);
+        players.forEach((p) => {
+          if (p.status === "idle") {
+            p.restStreak++;
+            p.onStreak = 0;
+          }
+        });
+        court.users.forEach((p) => {
+          p.status = "idle";
+        });
+        court.users = [];
+        drawCourt(cId);
+        render();
+      }
+
+      function render() {
+        // 2. 移除多餘的 "比賽中" 文字標籤
+        document.getElementById("courtsArea").innerHTML = courts
+          .map(
+            (c) => `
+            <div class="court-card">
+                <div class="court-header">📍 場地 ${c.id}</div>
+                <div class="match-display">
+                    <div><b>${c.users[0].name}</b><br><b>${c.users[1].name}</b></div>
+                    <div style="color:#aaa; font-style:italic;">VS</div>
+                    <div><b>${c.users[2].name}</b><br><b>${c.users[3].name}</b></div>
+                </div>
+                <div class="scorer-info">📋 記分：${c.users[4].name}</div>
+                <button class="btn-finish" onclick="finishCourt(${c.id})">✅ 此場結束 (換下一組)</button>
             </div>
-        `).join('');
-        }
+        `
+          )
+          .join("");
 
-        function init() {
-            if (playerNames.length === 0) return alert("請先加入球員");
+        const waiters = players
+          .filter((p) => p.status === "idle")
+          .sort((a, b) => b.restStreak - a.restStreak);
+        document.getElementById("waitingArea").innerHTML = waiters
+          .map(
+            (p) =>
+              `<span class="tag" style="background:#fff;">${p.name} (休${p.restStreak})</span>`
+          )
+          .join(" ");
 
-            players = playerNames.map(n => ({
-                name: n, played: 0, rest: 0, on: false
-            }));
+        // 在 render() 函式的表格生成部分修改如下：
+        document.getElementById("pStats").innerHTML = players
+          .map((p) => {
+            let statusText = "休息";
+            let statusClass = "status-off";
 
-            const cNum = parseInt(document.getElementById('cNum').value);
-            if (players.length < cNum * 4) return alert("人數不足，場地需 " + (cNum * 4) + " 人");
-
-            round = 0;
-            document.getElementById('displayArea').style.display = 'block';
-            document.getElementById('nextBtn').disabled = false;
-            draw();
-        }
-
-        function draw() {
-            round++;
-            const cNum = parseInt(document.getElementById('cNum').value);
-            const rLimit = parseInt(document.getElementById('rLimit').value);
-            const need = cNum * 4;
-
-            const maxP = Math.max(...players.map(p => p.played));
-            players.forEach(p => {
-                p.weight = 1 + 2 * (maxP - p.played) + 1 * p.rest;
-            });
-
-            let must = players.filter(p => p.rest >= rLimit);
-            let others = players.filter(p => p.rest < rLimit);
-
-            let selected = [];
-            if (must.length >= need) {
-                selected = must.sort(() => Math.random() - 0.5).slice(0, need);
-            } else {
-                selected = [...must];
-                others.sort(() => Math.random() - 0.5);
-                for (let i = selected.length; i < need; i++) {
-                    let totalW = others.reduce((s, p) => s + p.weight, 0);
-                    let r = Math.random() * totalW;
-                    let sum = 0;
-                    for (let j = 0; j < others.length; j++) {
-                        sum += others[j].weight;
-                        if (r <= sum) {
-                            selected.push(others.splice(j, 1)[0]);
-                            break;
-                        }
-                    }
-                }
+            if (p.status === "playing") {
+              statusText = "🏸 上場";
+              statusClass = "status-on";
+            } else if (p.status === "scoring") {
+              statusText = "📋 計分中";
+              statusClass = "status-scoring"; // 稍後在 CSS 加入此樣式
             }
 
-            const names = selected.map(s => s.name);
-            players.forEach(p => {
-                if (names.includes(p.name)) {
-                    p.played++; p.rest = 0; p.on = true;
-                } else {
-                    p.rest++; p.on = false;
-                }
-            });
-
-            renderMatches(selected, cNum);
-        }
-
-        function renderMatches(selected, cNum) {
-            document.getElementById('roundInfo').innerText = "第 " + round + " 局";
-            const courtDiv = document.getElementById('courts');
-            courtDiv.innerHTML = '';
-            const shuffled = [...selected].sort(() => Math.random() - 0.5);
-
-            for (let i = 0; i < cNum; i++) {
-                const p = shuffled.slice(i * 4, i * 4 + 4);
-                courtDiv.innerHTML += `
-                <div class="court-card">
-                    <div class="court-title">場地 ${i + 1}</div>
-                    <div class="match">
-                        <div class="team"><span>${p[0].name}</span><span>${p[1].name}</span></div>
-                        <div class="vs">vs</div>
-                        <div class="team"><span>${p[2].name}</span><span>${p[3].name}</span></div>
-                    </div>
-                </div>`;
-            }
-
-            const rests = players.filter(p => !p.on);
-            document.getElementById('restPlayers').innerHTML = '<strong>☕ 休息：</strong>' +
-                rests.map(p => `<span class="tag">${p.name}</span>`).join('');
-
-            const tbody = document.getElementById('stats');
-            tbody.innerHTML = '';
-            [...players].sort((a, b) => a.played - b.played).forEach(p => {
-                const rLimit = parseInt(document.getElementById('rLimit').value);
-                tbody.innerHTML += `
-                <tr class="${p.on ? 'active-row' : ''}">
-                    <td>${p.name}</td>
-                    <td>${p.played}</td>
-                    <td>${p.rest}</td>
-                    <td>${p.on ? '🏸上場' : (p.rest >= rLimit ? '<span class="must-tag">🔥必上</span>' : '休')}</td>
-                </tr>`;
-            });
-        }
+            return `
+        <tr>
+            <td>${p.name}</td>
+            <td>${p.played}</td>
+            <td>${p.onStreak}</td>
+            <td>${p.restStreak}</td>
+            <td class="${statusClass}">${statusText}</td>
+        </tr>`;
+          })
+          .join("");
+      }
     </script>
-</body>
-
+  </body>
 </html>
