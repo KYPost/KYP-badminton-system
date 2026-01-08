@@ -405,7 +405,6 @@
     </div>
 
     <script>
-      // 這裡保留您原始腳本的所有功能邏輯
       let names = [
         "小甫",
         "Richard",
@@ -424,29 +423,8 @@
       let courts = [];
 
       window.onload = () => updatePool();
-      // 放在 window.onload 裡面或腳本最後方
-      document.addEventListener(
-        "touchstart",
-        function (event) {
-          if (event.touches.length > 1) {
-            event.preventDefault(); // 禁用多點觸控縮放
-          }
-        },
-        { passive: false }
-      );
 
-      let lastTouchEnd = 0;
-      document.addEventListener(
-        "touchend",
-        function (event) {
-          const now = new Date().getTime();
-          if (now - lastTouchEnd <= 300) {
-            event.preventDefault(); // 禁用 300 毫秒內的連續雙擊放大
-          }
-          lastTouchEnd = now;
-        },
-        false
-      );
+      // --- UI 輔助功能 ---
       function toggleCustom(s) {
         if (s.value === "_custom_") {
           s.style.display = "none";
@@ -487,17 +465,18 @@
         );
         document.getElementById("pPool").innerHTML = sortedNames
           .map(
-            (n) => `
-            <div class="tag">${n}<button class="btn-del" onclick="delPlayer('${n}')">×</button></div>
-        `
+            (n) =>
+              `<div class="tag">${n}<button class="btn-del" onclick="delPlayer('${n}')">×</button></div>`
           )
           .join("");
       }
 
+      // --- 核心邏輯控制 ---
+
       function initSystem() {
         const cQty = parseInt(document.getElementById("courtQty").value);
-        if (names.length < 8)
-          return alert(`人數不足！至少需要 8 人才能開 2 場`);
+        if (names.length < 4 * cQty)
+          return alert(`人數不足！${cQty} 個場地至少需要 ${4 * cQty} 人`);
 
         players = names.map((n) => ({
           name: n,
@@ -514,15 +493,17 @@
 
         document.getElementById("setupView").style.display = "none";
         document.getElementById("mainView").style.display = "block";
-        document.getElementById("title").innerText = "🎾 排場系統運作中";
+        document.getElementById("title").innerText = "🏸 排場系統運作中";
 
         refreshAllCourts();
       }
 
-      // 全場重新抽籤
+      // 邏輯 2: 全場重新抽籤 (適用於 N <= 6n)
       function refreshAllCourts() {
-        // 1. 重置所有場位與狀態
-        courts.forEach((c) => (c.users = []));
+        const cQty = courts.length;
+        const totalPeople = players.length;
+
+        // 更新連打與連休狀態
         players.forEach((p) => {
           if (p.status !== "idle") {
             p.onStreak++;
@@ -534,7 +515,7 @@
           p.status = "idle";
         });
 
-        // 2. 排序優先權：休息最久 -> 打最少場 -> 隨機
+        // 排序：休息最久 > 場數最少 > 隨機
         let pool = [...players].sort(
           (a, b) =>
             b.restStreak - a.restStreak ||
@@ -542,21 +523,18 @@
             Math.random() - 0.5
         );
 
-        // 3. 判斷是否需要計分員 (人數 <= 9 不需要)
-        const needsScorer = names.length > 9;
+        // 邏輯 1: 判定是否需要計分員 (N >= 5n 則需要)
+        const needsScorer = totalPeople >= 5 * cQty;
 
-        // 4. 分配場地
-        courts.forEach((court, idx) => {
+        courts.forEach((court) => {
           let required = needsScorer ? 5 : 4;
           let selected = pool.splice(0, required);
 
           if (selected.length >= 4) {
-            // 前4人上場
             for (let i = 0; i < 4; i++) {
               selected[i].status = "playing";
               selected[i].played++;
             }
-            // 第5人記分 (如果需要)
             if (needsScorer && selected[4]) {
               selected[4].status = "scoring";
               selected[4].onStreak = 0;
@@ -567,21 +545,23 @@
         render();
       }
 
+      // 單場結束邏輯 (適用於 N > 6n)
       function finishOneCourt(cId) {
-        // 單場結束邏輯：僅用於 13人以上
         const court = courts.find((c) => c.id === cId);
-        // 先處理沒在場上的人 (增加連休)
+        const maxOn = parseInt(document.getElementById("maxOn").value);
+
+        // 目前沒在打球的人體力恢復(增加連休)
         players.forEach((p) => {
           if (p.status === "idle") p.restStreak++;
         });
-        // 釋放場上的人
+
+        // 場上的人下場
         court.users.forEach((p) => {
-          if (p.status === "playing") p.restStreak = 0; // 下場開始算休息
           p.status = "idle";
+          p.onStreak = p.status === "playing" ? p.onStreak : 0;
         });
 
-        // 重新尋找這場的 5 人
-        let maxOn = parseInt(document.getElementById("maxOn").value);
+        // 挑選新人：考慮連打限制
         let available = players.filter(
           (p) => p.status === "idle" && p.onStreak < maxOn
         );
@@ -595,6 +575,7 @@
             Math.random() - 0.5
         );
 
+        // 單場結束通常人數多，必有計分員
         let selected = available.slice(0, 5);
         selected.slice(0, 4).forEach((p) => {
           p.status = "playing";
@@ -602,37 +583,47 @@
           p.onStreak++;
           p.restStreak = 0;
         });
-        selected[4].status = "scoring";
-        selected[4].onStreak = 0;
+        if (selected[4]) {
+          selected[4].status = "scoring";
+          selected[4].onStreak = 0;
+        }
 
         court.users = selected;
         render();
       }
 
       function render() {
-        const isSmallGroup = names.length >= 8 && names.length <= 12;
+        const cQty = courts.length;
+        const isWholeMode = names.length <= 6 * cQty; // 邏輯 2：判斷全場換組模式
 
         let html = courts
           .map((c) => {
             if (c.users.length < 4)
               return `<div class="court-card">📍 場地 ${c.id}<br>等待分配中...</div>`;
 
-            const scorerHtml = c.users[4]
-              ? `<div class="scorer-info">📋 記分員：<strong>${c.users[4].name}</strong></div>`
-              : `<div class="scorer-info" style="border-color:#ccc; color:#999;">🚫 此人數規模不設記分員</div>`;
+            const scorer = c.users[4];
+            const scorerHtml =
+              scorer && scorer.status === "scoring"
+                ? `<div class="scorer-info">📋 記分員：<strong>${scorer.name}</strong></div>`
+                : `<div class="scorer-info" style="border-color:#ccc; color:#999;">🚫 此人數規模不設記分員</div>`;
 
-            // 如果是 8-12 人，隱藏「結束此場」按鈕
-            const btnHtml = isSmallGroup
+            const btnHtml = isWholeMode
               ? ""
               : `<button class="btn-finish" onclick="finishOneCourt(${c.id})">✅ 結束此場 (換下一組)</button>`;
 
             return `
                 <div class="court-card">
-                    <div class="court-header">📍 場地 ${c.id}</div>
+                    <div class="court-header">📍 場地 ${c.id} ${
+              isWholeMode ? "(全場更換中)" : ""
+            }</div>
                     <div class="match-display">
-                        <div class="team"><b>${c.users[0].name}</b><b>${c.users[1].name}</b></div>
+                        <div class="team"><b>${c.users[0].name}</b><b>${
+              c.users[1].name
+            }</b></div>
                         <div style="color:#aaa; font-style:italic; font-size:1rem;">VS</div>
-                        <div class="team"><b>${c.users[2].name}</b><b>${c.users[3].name}</b></div>
+                        <div class="team"><b>${c.users[2].name}</b><b>${
+              c.users[3].name
+            }</b></div>
                     </div>
                     ${scorerHtml}
                     ${btnHtml}
@@ -640,26 +631,23 @@
           })
           .join("");
 
-        // 如果是 8-12 人，增加一個全場抽籤的大按鈕
-        if (isSmallGroup) {
-          html += `<button class="btn-start" style="background:var(--success); margin-bottom:20px;" onclick="refreshAllCourts()">🔄 全場換組 (人數 ${names.length} 人)</button>`;
+        if (isWholeMode) {
+          html += `<button class="btn-start" style="background:var(--success); margin-bottom:20px;" onclick="refreshAllCourts()">🔄 全場換組 (當前人數：${names.length})</button>`;
         }
 
         document.getElementById("courtsArea").innerHTML = html;
 
-        // 渲染統計區與休息區
+        // 渲染統計區
         const waiters = players
           .filter((p) => p.status === "idle")
           .sort((a, b) => b.restStreak - a.restStreak);
         document.getElementById("waitingArea").innerHTML =
-          waiters.length > 0
-            ? waiters
-                .map(
-                  (p) =>
-                    `<span class="waiting-tag">${p.name} <small>(休${p.restStreak})</small></span>`
-                )
-                .join("")
-            : "目前全員上場中";
+          waiters
+            .map(
+              (p) =>
+                `<span class="waiting-tag">${p.name} <small>(休${p.restStreak})</small></span>`
+            )
+            .join("") || "無";
 
         document.getElementById("pStats").innerHTML = players
           .map((p) => {
