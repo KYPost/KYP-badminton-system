@@ -405,7 +405,7 @@
     </div>
 
     <script>
-      let names = [
+      const defaultNames = [
         "小甫",
         "Richard",
         "Sasha",
@@ -419,10 +419,17 @@
         "Sally",
         "Chloe",
       ];
+      let names =
+        JSON.parse(localStorage.getItem("badminton_names")) || defaultNames;
+
       let players = [];
       let courts = [];
 
       window.onload = () => updatePool();
+
+      function saveToLocal() {
+        localStorage.setItem("badminton_names", JSON.stringify(names));
+      }
 
       // --- UI 輔助功能 ---
       function toggleCustom(s) {
@@ -449,12 +456,14 @@
         if (n && !names.includes(n)) {
           names.push(n);
           if (inp.style.display === "block") inp.value = "";
+          saveToLocal(); // 儲存名單
           updatePool();
         }
       }
 
       function delPlayer(n) {
         names = names.filter((i) => i !== n);
+        saveToLocal(); // 儲存名單
         updatePool();
       }
 
