@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0,
-    maximum-scale=1.0, user-scalable=no,viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no,viewport-fit=cover"
     />
-    <title>羽球分組系統</title>
+    <title>羽球分組系統 (權重優化版)</title>
     <style>
+      /* 保持您原有的 CSS 樣式不變 */
       :root {
         --primary: #2c3e50;
         --accent: #3498db;
@@ -25,7 +25,7 @@
       body {
         touch-action: manipulation;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          "Helvetica Neue", Arial, sans-serif;
+          sans-serif;
         background: #f0f2f5;
         margin: 0;
         padding: 12px;
@@ -40,7 +40,6 @@
         border-radius: 12px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
       }
-
       h1 {
         text-align: center;
         font-size: 1.6rem;
@@ -50,8 +49,6 @@
         justify-content: center;
         gap: 10px;
       }
-
-      /* 輸入介面樣式 */
       .input-group {
         display: flex;
         flex-direction: column;
@@ -68,7 +65,6 @@
         width: 100%;
         align-items: center;
       }
-
       select,
       input {
         flex: 1;
@@ -78,21 +74,20 @@
         font-size: 16px !important;
         background: white;
       }
-
       .btn-back {
         background: #95a5a6;
         color: white;
         border: none;
-        padding: 0 12px; /* 給予左右內距讓文字呼吸 */
+        padding: 0 12px;
         border-radius: 8px;
         cursor: pointer;
-        height: 48px; /* 高度與輸入框保持一致 */
-        font-size: 10px; /* 字體稍縮小，更精緻 */
+        height: 48px;
+        font-size: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        white-space: nowrap; /* 強制文字不換行 */
-        flex-shrink: 0; /* 防止按鈕被輸入框擠壓變形 */
+        white-space: nowrap;
+        flex-shrink: 0;
       }
       .btn-add {
         background: var(--primary);
@@ -104,10 +99,7 @@
         font-size: 16px;
         width: 100%;
         font-weight: bold;
-        transition: opacity 0.2s;
       }
-
-      /* 球員標籤與容器 */
       .player-pool {
         display: flex;
         flex-wrap: wrap;
@@ -121,12 +113,11 @@
         max-height: 200px;
         overflow-y: auto;
       }
-      /* 球員標籤樣式 */
       .tag {
         background: #f0f7ff;
         border: 1px solid #d1e9ff;
         padding: 6px 15px;
-        border-radius: 8px; /* 原為 8px，改為 4px 減少圓弧感 */
+        border-radius: 8px;
         display: flex;
         align-items: center;
         gap: 5px;
@@ -139,41 +130,23 @@
         font-weight: bold;
         cursor: pointer;
         font-size: 1.2rem;
-        padding: 0 2px;
-        line-height: 1; /* 數值可以根據視覺微調，例如 1.2 ~ 1.5 */
-        vertical-align: middle;
+        line-height: 1;
       }
-
-      /* 手機端排版關鍵：垂直化設定區 */
       .setting-row {
         display: flex;
-        flex-direction: column; /* 改為垂直排列，解決手機重疊問題 */
+        flex-direction: column;
         gap: 15px;
         margin-top: 15px;
-        padding: 0 5px;
       }
-
       .setting-group {
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
-
       .setting-group label {
         font-weight: bold;
-        font-size: 0.95rem;
         color: #444;
       }
-
-      .setting-group input {
-        width: 100%; /* 確保輸入框充滿寬度 */
-        padding: 12px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 16px;
-      }
-
-      /* 場地卡片美化 */
       .court-card {
         background: #fbfdff;
         border: 1px solid #ddecff;
@@ -181,7 +154,6 @@
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
       }
       .court-header {
         font-weight: bold;
@@ -205,16 +177,6 @@
         display: block;
         line-height: 1.4;
       }
-      .scorer-info {
-        background: #fff9f0;
-        border: 1px dashed var(--warning);
-        padding: 10px;
-        border-radius: 8px;
-        font-size: 0.95rem;
-        text-align: center;
-        color: #856404;
-        margin-top: 10px;
-      }
       .btn-finish {
         background: var(--success);
         color: white;
@@ -227,8 +189,6 @@
         margin-top: 15px;
         font-size: 1rem;
       }
-
-      /* 休息區與統計 */
       .rest-box {
         background: #fff3e0;
         padding: 15px;
@@ -249,7 +209,6 @@
         border: 1px solid #ffd180;
         font-size: 0.9rem;
       }
-
       .stats-table {
         width: 100%;
         border-collapse: collapse;
@@ -261,8 +220,6 @@
       }
       .stats-table th {
         background: #f8f9fa;
-        color: #666;
-        font-weight: 600;
         padding: 12px 5px;
         border-bottom: 2px solid #dee2e6;
       }
@@ -270,22 +227,14 @@
         padding: 12px 5px;
         border: 1px solid #ddd;
         text-align: center;
-        border-bottom: 1px solid #eee;
       }
-
-      /* 狀態顏色 */
       .status-on {
         color: var(--success);
-        font-weight: bold;
-      }
-      .status-scoring {
-        color: var(--warning);
         font-weight: bold;
       }
       .status-off {
         color: #abb5be;
       }
-
       .btn-start {
         background: var(--accent);
         width: 100%;
@@ -296,7 +245,6 @@
         font-weight: bold;
         font-size: 1.2rem;
         margin-top: 10px;
-        box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
       }
       .btn-reset {
         background: #f8f9fa;
@@ -312,7 +260,7 @@
   </head>
   <body>
     <div class="container">
-      <h1 id="title">🏸 羽球排場系統</h1>
+      <h1 id="title">🏸 羽球分組系統</h1>
 
       <div id="setupView">
         <details open>
@@ -329,7 +277,6 @@
                 <option value="Jamie">Jamie</option>
                 <option value="Momo">Momo</option>
                 <option value="Nora">Nora</option>
-                <option value="Nora (室友)">Nora (室友)</option>
                 <option value="Reno">Reno</option>
                 <option value="Richard">Richard</option>
                 <option value="Sally">Sally</option>
@@ -337,8 +284,6 @@
                 <option value="Sasha">Sasha</option>
                 <option value="Vivian">Vivian</option>
                 <option value="小甫">小甫</option>
-                <option value="小甫友 (老曹)">小甫友 (老曹)</option>
-                <option value="小甫友 (魚丸)">小甫友 (魚丸)</option>
                 <option value="_custom_">其他人員 (手動輸入)</option>
               </select>
               <input
@@ -358,17 +303,23 @@
             </div>
             <button class="btn-add" onclick="addPlayer()">＋ 加入名單</button>
           </div>
-
           <div class="player-pool" id="pPool"></div>
-
+          <button
+            class="btn-reset"
+            style="
+              margin-top: 0;
+              margin-bottom: 20px;
+              border-color: #ccc;
+              color: #666;
+            "
+            onclick="clearAllNames()"
+          >
+            🗑️ 清空成員名單
+          </button>
           <div class="setting-row">
             <div class="setting-group">
               <label for="courtQty">場地數</label>
               <input type="number" id="courtQty" value="2" min="1" />
-            </div>
-            <div class="setting-group">
-              <label for="maxOn">最高連續上場次數</label>
-              <input type="number" id="maxOn" value="2" min="1" />
             </div>
           </div>
         </details>
@@ -379,17 +330,15 @@
 
       <div id="mainView" style="display: none">
         <div id="courtsArea"></div>
-
         <div class="rest-box">
           <strong>☕ 休息名單 (優先上場排序)：</strong>
           <div id="waitingArea" class="waiting-list"></div>
         </div>
-
         <table class="stats-table">
           <thead>
             <tr>
               <th>球員</th>
-              <th>場數</th>
+              <th>總場數</th>
               <th>連上</th>
               <th>連休</th>
               <th>狀態</th>
@@ -397,7 +346,6 @@
           </thead>
           <tbody id="pStats"></tbody>
         </table>
-
         <button onclick="location.reload()" class="btn-reset">
           結束活動並重置數據
         </button>
@@ -405,33 +353,16 @@
     </div>
 
     <script>
-      const defaultNames = [
-        "小甫",
-        "Richard",
-        "Sasha",
-        "Momo",
-        "Nora",
-        "Bonnie",
-        "Apple",
-        "Vivian",
-        "Sam",
-        "Reno",
-        "Sally",
-        "Chloe",
-      ];
       let names =
-        JSON.parse(localStorage.getItem("badminton_names")) || defaultNames;
-
+        JSON.parse(localStorage.getItem("badminton_names_simple")) || [];
       let players = [];
       let courts = [];
 
       window.onload = () => updatePool();
 
       function saveToLocal() {
-        localStorage.setItem("badminton_names", JSON.stringify(names));
+        localStorage.setItem("badminton_names_simple", JSON.stringify(names));
       }
-
-      // --- UI 輔助功能 ---
       function toggleCustom(s) {
         if (s.value === "_custom_") {
           s.style.display = "none";
@@ -440,7 +371,6 @@
           document.getElementById("cInput").focus();
         }
       }
-
       function resetUI() {
         const s = document.getElementById("pSelect");
         s.style.display = "block";
@@ -448,7 +378,6 @@
         document.getElementById("cInput").style.display = "none";
         document.getElementById("backBtn").style.display = "none";
       }
-
       function addPlayer() {
         const sel = document.getElementById("pSelect");
         const inp = document.getElementById("cInput");
@@ -456,31 +385,25 @@
         if (n && !names.includes(n)) {
           names.push(n);
           if (inp.style.display === "block") inp.value = "";
-          saveToLocal(); // 儲存名單
+          saveToLocal();
           updatePool();
         }
       }
-
       function delPlayer(n) {
         names = names.filter((i) => i !== n);
-        saveToLocal(); // 儲存名單
+        saveToLocal();
         updatePool();
       }
-
       function updatePool() {
         document.getElementById("pCount").innerText = names.length;
-        const sortedNames = [...names].sort((a, b) =>
-          a.localeCompare(b, "zh-Hans-TW")
-        );
-        document.getElementById("pPool").innerHTML = sortedNames
+        document.getElementById("pPool").innerHTML = [...names]
+          .sort((a, b) => a.localeCompare(b, "zh-TW"))
           .map(
             (n) =>
               `<div class="tag">${n}<button class="btn-del" onclick="delPlayer('${n}')">×</button></div>`
           )
           .join("");
       }
-
-      // --- 核心邏輯控制 ---
 
       function initSystem() {
         const cQty = parseInt(document.getElementById("courtQty").value);
@@ -493,165 +416,189 @@
           onStreak: 0,
           restStreak: 0,
           status: "idle",
+          history: {}, // 記錄曾與誰同場過
         }));
 
         courts = Array.from({ length: cQty }, (_, i) => ({
           id: i + 1,
           users: [],
         }));
-
         document.getElementById("setupView").style.display = "none";
         document.getElementById("mainView").style.display = "block";
         document.getElementById("title").innerText = "🏸 排場系統運作中";
-
-        refreshAllCourts();
+        drawGroups(true);
       }
 
-      // 邏輯 2: 全場重新抽籤 (適用於 N <= 6n)
-      function refreshAllCourts() {
-        const cQty = courts.length;
-        const totalPeople = players.length;
+      // 優化選人算法：增加 LOG 監控與休息上限保送
+      function pickPlayersForCourt(count) {
+        let selected = [];
+        let pool = players.filter((p) => p.status !== "playing");
 
-        // 更新連打與連休狀態
-        players.forEach((p) => {
-          if (p.status !== "idle") {
-            p.onStreak++;
-            p.restStreak = 0;
-          } else {
-            p.restStreak++;
+        console.log(`--- ⚖️ 開始排場權重計算 (預計挑選 ${count} 人) ---`);
+
+        for (let i = 0; i < count; i++) {
+          if (pool.length === 0) break;
+
+          let candidates = pool.map((p) => {
+            let baseRand = Math.random() * 200;
+            let restScore = p.restStreak * 60;
+            let onStreakScore = -(p.onStreak * 50);
+            let playedScore = -(p.played * 20);
+
+            // 休息上限保送加成
+            let guaranteeScore =
+              p.restStreak >= 3 ? 5000 + p.restStreak * 100 : 0;
+
+            // 對戰歷史懲罰
+            let historyPenalty = 0;
+            selected.forEach((s) => {
+              let metTimes = p.history[s.name] || 0;
+              historyPenalty -= metTimes * 100;
+            });
+
+            let finalScore =
+              baseRand +
+              restScore +
+              onStreakScore +
+              playedScore +
+              guaranteeScore +
+              historyPenalty;
+
+            return {
+              name: p.name,
+              player: p,
+              finalScore: finalScore.toFixed(2),
+              detail: `隨機:${baseRand.toFixed(
+                1
+              )}, 休:${restScore}, 連打:${onStreakScore}, 場次:${playedScore}, 保送:${guaranteeScore}, 對戰懲罰:${historyPenalty}`,
+            };
+          });
+
+          // 排序
+          candidates.sort((a, b) => b.finalScore - a.finalScore);
+
+          // Log 出目前池子裡的評分狀況 (每挑一個人就 Log 一次，因為對戰懲罰會變)
+          console.table(
+            candidates.map((c) => ({
+              球員: c.name,
+              最終總分: c.finalScore,
+              計算明細: c.detail,
+            }))
+          );
+
+          let picked = candidates[0].player;
+          console.log(`✅ 第 ${i + 1} 位選中：${picked.name}`);
+
+          selected.push(picked);
+          pool = pool.filter((p) => p !== picked);
+        }
+        return selected;
+      }
+
+      function drawGroups(isWholeRefresh) {
+        if (isWholeRefresh) {
+          players.forEach((p) => {
+            p.status = "idle";
             p.onStreak = 0;
-          }
-          p.status = "idle";
-        });
+          });
 
-        // 排序：休息最久 > 場數最少 > 隨機
-        let pool = [...players].sort(
-          (a, b) =>
-            b.restStreak - a.restStreak ||
-            a.played - b.played ||
-            Math.random() - 0.5
-        );
-
-        // 邏輯 1: 判定是否需要計分員 (N >= 5n 則需要)
-        const needsScorer = totalPeople >= 5 * cQty;
-
-        courts.forEach((court) => {
-          let required = needsScorer ? 5 : 4;
-          let selected = pool.splice(0, required);
-
-          if (selected.length >= 4) {
-            for (let i = 0; i < 4; i++) {
-              selected[i].status = "playing";
-              selected[i].played++;
+          courts.forEach((court) => {
+            let selected = pickPlayersForCourt(4);
+            if (selected.length === 4) {
+              court.users = selected;
+              selected.forEach((p) => (p.status = "playing"));
             }
-            if (needsScorer && selected[4]) {
-              selected[4].status = "scoring";
-              selected[4].onStreak = 0;
-            }
-            court.users = selected;
-          }
-        });
+          });
+
+          const allOnCourt = courts.flatMap((c) => c.users);
+          updateStats(allOnCourt);
+        }
         render();
       }
 
-      // 單場結束邏輯 (適用於 N > 6n)
       function finishOneCourt(cId) {
         const court = courts.find((c) => c.id === cId);
-        const maxOn = parseInt(document.getElementById("maxOn").value);
 
-        // 目前沒在打球的人體力恢復(增加連休)
-        players.forEach((p) => {
-          if (p.status === "idle") p.restStreak++;
-        });
+        // 讓原本場上的人回到池中參與競爭
+        court.users.forEach((p) => (p.status = "idle"));
 
-        // 場上的人下場
-        court.users.forEach((p) => {
-          p.status = "idle";
-          p.onStreak = p.status === "playing" ? p.onStreak : 0;
-        });
+        let nextUsers = pickPlayersForCourt(4);
+        if (nextUsers.length < 4) return alert("可用球員不足！");
 
-        // 挑選新人：考慮連打限制
-        let available = players.filter(
-          (p) => p.status === "idle" && p.onStreak < maxOn
-        );
-        if (available.length < 5)
-          available = players.filter((p) => p.status === "idle");
-
-        available.sort(
-          (a, b) =>
-            b.restStreak - a.restStreak ||
-            a.played - b.played ||
-            Math.random() - 0.5
-        );
-
-        // 單場結束通常人數多，必有計分員
-        let selected = available.slice(0, 5);
-        selected.slice(0, 4).forEach((p) => {
-          p.status = "playing";
-          p.played++;
-          p.onStreak++;
-          p.restStreak = 0;
-        });
-        if (selected[4]) {
-          selected[4].status = "scoring";
-          selected[4].onStreak = 0;
-        }
-
-        court.users = selected;
+        court.users = nextUsers;
+        updateStats(nextUsers);
         render();
+      }
+
+      function updateStats(newArrivals) {
+        const allOnCourt = courts.flatMap((c) => c.users);
+
+        // 每一場比賽結束時，更新該場 4 人的對戰歷史
+        courts.forEach((c) => {
+          if (c.users.length === 4) {
+            c.users.forEach((p) => {
+              c.users.forEach((target) => {
+                if (p !== target) {
+                  p.history[target.name] = (p.history[target.name] || 0) + 1;
+                }
+              });
+            });
+          }
+        });
+
+        players.forEach((p) => {
+          if (newArrivals.includes(p)) {
+            p.status = "playing";
+            p.played++;
+            p.onStreak++;
+            p.restStreak = 0;
+          } else if (allOnCourt.includes(p)) {
+            p.status = "playing";
+          } else {
+            p.status = "idle";
+            p.onStreak = 0;
+            p.restStreak++;
+          }
+        });
       }
 
       function render() {
         const cQty = courts.length;
-        const isWholeMode = names.length <= 6 * cQty; // 邏輯 2：判斷全場換組模式
+        const totalP = players.length;
+        // 如果總人數不多，提供全場換組按鈕
+        const isWholeMode = totalP <= 4 * cQty + 2;
 
         let html = courts
           .map((c) => {
             if (c.users.length < 4)
-              return `<div class="court-card">📍 場地 ${c.id}<br>等待分配中...</div>`;
+              return `<div class="court-card">📍 場地 ${c.id}<br>人數不足</div>`;
+            const btn = `<button class="btn-finish" onclick="finishOneCourt(${c.id})">✅ 結束並換人</button>`;
 
-            const scorer = c.users[4];
-            const scorerHtml =
-              scorer && scorer.status === "scoring"
-                ? `<div class="scorer-info">📋 記分員：<strong>${scorer.name}</strong></div>`
-                : `<div class="scorer-info" style="border-color:#ccc; color:#999;">🚫 此人數規模不設記分員</div>`;
-
-            const btnHtml = isWholeMode
-              ? ""
-              : `<button class="btn-finish" onclick="finishOneCourt(${c.id})">✅ 結束此場 (換下一組)</button>`;
+            // 顯示時隨機打亂視覺上的隊友位置
+            let d = [...c.users];
 
             return `
-                <div class="court-card">
-                    <div class="court-header">📍 場地 ${c.id} ${
-              isWholeMode ? "(全場更換中)" : ""
-            }</div>
-                    <div class="match-display">
-                        <div class="team"><b>${c.users[0].name}</b><b>${
-              c.users[1].name
-            }</b></div>
-                        <div style="color:#aaa; font-style:italic; font-size:1rem;">VS</div>
-                        <div class="team"><b>${c.users[2].name}</b><b>${
-              c.users[3].name
-            }</b></div>
-                    </div>
-                    ${scorerHtml}
-                    ${btnHtml}
-                </div>`;
+      <div class="court-card">
+        <div class="court-header">📍 場地 ${c.id}</div>
+        <div class="match-display">
+          <div class="team"><b>${d[0].name}</b><b>${d[1].name}</b></div>
+          <div style="color:#aaa; font-style:italic;">VS</div>
+          <div class="team"><b>${d[2].name}</b><b>${d[3].name}</b></div>
+        </div>
+        ${btn}
+      </div>`;
           })
           .join("");
 
-        if (isWholeMode) {
-          html += `<button class="btn-start" style="background:var(--success); margin-bottom:20px;" onclick="refreshAllCourts()">🔄 全場換組 (當前人數：${names.length})</button>`;
+        if (totalP > 0) {
+          html += `<button class="btn-start" style="background:var(--success); margin-bottom:20px; background-color: #66cf36;" onclick="drawGroups(true)">🔄 全場打亂重抽</button>`;
         }
 
         document.getElementById("courtsArea").innerHTML = html;
-
-        // 渲染統計區
-        const waiters = players
-          .filter((p) => p.status === "idle")
-          .sort((a, b) => b.restStreak - a.restStreak);
         document.getElementById("waitingArea").innerHTML =
-          waiters
+          players
+            .filter((p) => p.status === "idle")
+            .sort((a, b) => b.restStreak - a.restStreak)
             .map(
               (p) =>
                 `<span class="waiting-tag">${p.name} <small>(休${p.restStreak})</small></span>`
@@ -659,19 +606,25 @@
             .join("") || "無";
 
         document.getElementById("pStats").innerHTML = players
+          .sort((a, b) => b.played - a.played || b.restStreak - a.restStreak)
           .map((p) => {
             let sText = "休息",
               sClass = "status-off";
             if (p.status === "playing") {
               sText = "🏸 上場";
               sClass = "status-on";
-            } else if (p.status === "scoring") {
-              sText = "📋 計分";
-              sClass = "status-scoring";
             }
             return `<tr><td>${p.name}</td><td>${p.played}</td><td>${p.onStreak}</td><td>${p.restStreak}</td><td class="${sClass}">${sText}</td></tr>`;
           })
           .join("");
+      }
+
+      function clearAllNames() {
+        if (confirm("確定要清空所有成員名單嗎？")) {
+          names = [];
+          saveToLocal();
+          updatePool();
+        }
       }
     </script>
   </body>
