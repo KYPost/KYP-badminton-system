@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
@@ -24,8 +24,8 @@
       }
       body {
         touch-action: manipulation;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background: #f0f2f5;
         margin: 0;
         padding: 12px;
@@ -400,7 +400,7 @@
           .sort((a, b) => a.localeCompare(b, "zh-TW"))
           .map(
             (n) =>
-              `<div class="tag">${n}<button class="btn-del" onclick="delPlayer('${n}')">×</button></div>`
+              `<div class="tag">${n}<button class="btn-del" onclick="delPlayer('${n}')">×</button></div>`,
           )
           .join("");
       }
@@ -416,7 +416,7 @@
           onStreak: 0,
           restStreak: 0,
           status: "idle",
-          history: {}, // 記錄曾與誰同場過
+          history: {},
         }));
 
         courts = Array.from({ length: cQty }, (_, i) => ({
@@ -429,31 +429,28 @@
         drawGroups(true);
       }
 
-      // 優化選人算法：增加 LOG 監控與休息上限保送
       function pickPlayersForCourt(count) {
         let selected = [];
-        let pool = players.filter((p) => p.status !== "playing");
+        // 這裡只過濾掉「已經被本輪選中場地」的人
+        let pool = players.filter((p) => !p.tempPicked);
 
-        console.log(`--- ⚖️ 開始排場權重計算 (預計挑選 ${count} 人) ---`);
+        console.log(`--- ⚖️ 權重計算 (挑選 ${count} 人) ---`);
 
         for (let i = 0; i < count; i++) {
           if (pool.length === 0) break;
 
           let candidates = pool.map((p) => {
-            let baseRand = Math.random() * 200;
-            let restScore = p.restStreak * 60;
-            let onStreakScore = -(p.onStreak * 50);
-            let playedScore = -(p.played * 20);
-
-            // 休息上限保送加成
+            let baseRand = Math.random() * 150; // 稍微調低隨機影響
+            let restScore = p.restStreak * 70;
+            let onStreakScore = -(p.onStreak * 120); // 大幅提高連打懲罰
+            let playedScore = -(p.played * 30);
             let guaranteeScore =
               p.restStreak >= 3 ? 5000 + p.restStreak * 100 : 0;
 
-            // 對戰歷史懲罰
             let historyPenalty = 0;
             selected.forEach((s) => {
               let metTimes = p.history[s.name] || 0;
-              historyPenalty -= metTimes * 100;
+              historyPenalty -= metTimes * 150;
             });
 
             let finalScore =
@@ -467,27 +464,14 @@
             return {
               name: p.name,
               player: p,
-              finalScore: finalScore.toFixed(2),
-              detail: `隨機:${baseRand.toFixed(
-                1
-              )}, 休:${restScore}, 連打:${onStreakScore}, 場次:${playedScore}, 保送:${guaranteeScore}, 對戰懲罰:${historyPenalty}`,
+              finalScore: finalScore,
+              detail: `隨機:${baseRand.toFixed(0)}, 休:${restScore}, 連打罰:${onStreakScore}, 保送:${guaranteeScore}, 對戰罰:${historyPenalty}`,
             };
           });
 
-          // 排序
           candidates.sort((a, b) => b.finalScore - a.finalScore);
-
-          // Log 出目前池子裡的評分狀況 (每挑一個人就 Log 一次，因為對戰懲罰會變)
-          console.table(
-            candidates.map((c) => ({
-              球員: c.name,
-              最終總分: c.finalScore,
-              計算明細: c.detail,
-            }))
-          );
-
           let picked = candidates[0].player;
-          console.log(`✅ 第 ${i + 1} 位選中：${picked.name}`);
+          picked.tempPicked = true; // 標記為本輪已選中
 
           selected.push(picked);
           pool = pool.filter((p) => p !== picked);
@@ -496,49 +480,61 @@
       }
 
       function drawGroups(isWholeRefresh) {
+        // 重置本輪挑選標記
+        players.forEach((p) => (p.tempPicked = false));
+
         if (isWholeRefresh) {
-          players.forEach((p) => {
-            p.status = "idle";
-            p.onStreak = 0;
+          // 全場重抽時，原本的人視為「剛從場上下來」以維持連打計算
+          courts.forEach((c) => {
+            let newUsers = pickPlayersForCourt(4);
+            // 先暫存新名單，不直接覆蓋，避免 updateStats 抓不到舊狀態
+            c.nextUsers = newUsers;
           });
 
-          courts.forEach((court) => {
-            let selected = pickPlayersForCourt(4);
-            if (selected.length === 4) {
-              court.users = selected;
-              selected.forEach((p) => (p.status = "playing"));
-            }
+          // 更新名單
+          courts.forEach((c) => {
+            c.users = c.nextUsers;
+            delete c.nextUsers;
           });
-
-          const allOnCourt = courts.flatMap((c) => c.users);
-          updateStats(allOnCourt);
         }
+
+        updateStats();
         render();
       }
 
       function finishOneCourt(cId) {
+        players.forEach((p) => (p.tempPicked = false));
         const court = courts.find((c) => c.id === cId);
 
-        // 讓原本場上的人回到池中參與競爭
-        court.users.forEach((p) => (p.status = "idle"));
+        // 標記其他球場正在打的人，讓他們不能被選中
+        courts.forEach((c) => {
+          if (c.id !== cId) {
+            c.users.forEach((u) => {
+              let p = players.find((pl) => pl.name === u.name);
+              if (p) p.tempPicked = true;
+            });
+          }
+        });
 
         let nextUsers = pickPlayersForCourt(4);
         if (nextUsers.length < 4) return alert("可用球員不足！");
 
         court.users = nextUsers;
-        updateStats(nextUsers);
+        updateStats();
         render();
       }
 
-      function updateStats(newArrivals) {
-        const allOnCourt = courts.flatMap((c) => c.users);
+      function updateStats() {
+        const allOnCourtNames = courts.flatMap((c) =>
+          c.users.map((u) => u.name),
+        );
 
-        // 每一場比賽結束時，更新該場 4 人的對戰歷史
+        // 1. 更新對戰歷史
         courts.forEach((c) => {
           if (c.users.length === 4) {
             c.users.forEach((p) => {
               c.users.forEach((target) => {
-                if (p !== target) {
+                if (p.name !== target.name) {
                   p.history[target.name] = (p.history[target.name] || 0) + 1;
                 }
               });
@@ -546,52 +542,50 @@
           }
         });
 
+        // 2. 更新狀態與連打次數 (關鍵修復)
         players.forEach((p) => {
-          if (newArrivals.includes(p)) {
-            p.status = "playing";
+          const isNowPlaying = allOnCourtNames.includes(p.name);
+
+          if (isNowPlaying) {
+            if (p.status === "playing") {
+              p.onStreak++; // 真的連打了
+            } else {
+              p.onStreak = 1; // 剛上場
+            }
             p.played++;
-            p.onStreak++;
             p.restStreak = 0;
-          } else if (allOnCourt.includes(p)) {
             p.status = "playing";
           } else {
-            p.status = "idle";
             p.onStreak = 0;
             p.restStreak++;
+            p.status = "idle";
           }
+          p.tempPicked = false; // 清除暫存標記
         });
       }
 
       function render() {
-        const cQty = courts.length;
-        const totalP = players.length;
-        // 如果總人數不多，提供全場換組按鈕
-        const isWholeMode = totalP <= 4 * cQty + 2;
-
         let html = courts
           .map((c) => {
             if (c.users.length < 4)
               return `<div class="court-card">📍 場地 ${c.id}<br>人數不足</div>`;
             const btn = `<button class="btn-finish" onclick="finishOneCourt(${c.id})">✅ 結束並換人</button>`;
-
-            // 顯示時隨機打亂視覺上的隊友位置
             let d = [...c.users];
-
             return `
-      <div class="court-card">
-        <div class="court-header">📍 場地 ${c.id}</div>
-        <div class="match-display">
-          <div class="team"><b>${d[0].name}</b><b>${d[1].name}</b></div>
-          <div style="color:#aaa; font-style:italic;">VS</div>
-          <div class="team"><b>${d[2].name}</b><b>${d[3].name}</b></div>
-        </div>
-        ${btn}
-      </div>`;
+        <div class="court-card">
+          <div class="court-header">📍 場地 ${c.id}</div>
+          <div class="match-display">
+            <div class="team"><b>${d[0].name}</b><b>${d[1].name}</b></div>
+            <div style="color:#aaa; font-style:italic;">VS</div>
+            <div class="team"><b>${d[2].name}</b><b>${d[3].name}</b></div>
+          </div>
+          ${btn}
+        </div>`;
           })
           .join("");
 
-        if (totalP > 0) {
-          html += `<button class="btn-start" style="background:var(--success); margin-bottom:20px; background-color: #66cf36;" onclick="drawGroups(true)">🔄 全場打亂重抽</button>`;
+        if (players.length > 0) {
+          html += `<button class="btn-start" style="background:#66cf36; margin-bottom:20px;" onclick="drawGroups(true)">🔄 全場打亂重抽</button>`;
         }
 
         document.getElementById("courtsArea").innerHTML = html;
@@ -601,19 +595,15 @@
             .sort((a, b) => b.restStreak - a.restStreak)
             .map(
               (p) =>
-                `<span class="waiting-tag">${p.name} <small>(休${p.restStreak})</small></span>`
+                `<span class="waiting-tag">${p.name} <small>(休${p.restStreak})</small></span>`,
             )
             .join("") || "無";
 
         document.getElementById("pStats").innerHTML = players
           .sort((a, b) => b.played - a.played || b.restStreak - a.restStreak)
           .map((p) => {
-            let sText = "休息",
-              sClass = "status-off";
-            if (p.status === "playing") {
-              sText = "🏸 上場";
-              sClass = "status-on";
-            }
+            let sClass = p.status === "playing" ? "status-on" : "status-off";
+            let sText = p.status === "playing" ? "🏸 上場" : "休息";
             return `<tr><td>${p.name}</td><td>${p.played}</td><td>${p.onStreak}</td><td>${p.restStreak}</td><td class="${sClass}">${sText}</td></tr>`;
           })
           .join("");
