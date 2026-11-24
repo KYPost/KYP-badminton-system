@@ -1,621 +1,1180 @@
 <!doctype html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no,viewport-fit=cover"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
-    <title>羽球分組系統 (權重優化版)</title>
+    <meta name="theme-color" content="#103731" />
+    <title>羽球分場</title>
     <style>
-      /* 保持您原有的 CSS 樣式不變 */
       :root {
-        --primary: #2c3e50;
-        --accent: #3498db;
-        --success: #27ae60;
-        --danger: #e74c3c;
-        --light: #f8f9fa;
-        --warning: #f39c12;
+        --bg: #eef2ec;
+        --surface: #ffffff;
+        --surface-soft: #f6f8f5;
+        --forest: #103731;
+        --forest-mid: #1a4f46;
+        --lime: #d9f779;
+        --lime-hover: #cef060;
+        --text: #132e29;
+        --muted: #5a7069;
+        --border: #dce4dc;
+        --danger: #b93829;
+        --danger-bg: #fdf1ef;
+        --amber-bg: #fff6df;
+        --amber-border: #e5ae40;
+        --amber-text: #69430b;
+        --radius-lg: 20px;
+        --radius-md: 14px;
+        --radius-sm: 10px;
+        --shadow-sm: 0 2px 8px rgba(16, 55, 49, 0.05);
+        --shadow-md: 0 10px 28px -6px rgba(16, 55, 49, 0.14);
       }
-      *,
-      *::before,
-      *::after {
+
+      * {
         box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
       }
+
+      [hidden] {
+        display: none !important;
+      }
+
       body {
-        touch-action: manipulation;
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #f0f2f5;
         margin: 0;
-        padding: 12px;
-        font-size: 14px;
-        color: #333;
+        background: var(--bg);
+        background-image: radial-gradient(#d5dfd3 1px, transparent 1px);
+        background-size: 20px 20px;
+        color: var(--text);
+        font:
+          16px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          "Microsoft JhengHei",
+          sans-serif;
+        min-height: 100dvh;
       }
-      .container {
-        max-width: 500px;
-        margin: 0 auto;
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
+      main {
+        width: min(100%, 520px);
+        margin: auto;
+        padding: 16px 14px 56px;
       }
+
+      header {
+        background: linear-gradient(
+          135deg,
+          var(--forest) 0%,
+          var(--forest-mid) 100%
+        );
+        color: #fff;
+        border-radius: var(--radius-lg);
+        padding: 22px 22px 20px;
+        margin-bottom: 14px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+      }
+
+      header::before {
+        content: "";
+        position: absolute;
+        right: -28px;
+        top: -32px;
+        width: 145px;
+        height: 210px;
+        transform: rotate(24deg);
+        border: 2px solid rgba(217, 247, 121, 0.35);
+        background:
+          linear-gradient(
+            90deg,
+            transparent 49%,
+            rgba(217, 247, 121, 0.35) 49% 51%,
+            transparent 51%
+          ),
+          repeating-linear-gradient(
+            0deg,
+            transparent 0 46px,
+            rgba(217, 247, 121, 0.35) 46px 48px
+          );
+        pointer-events: none;
+      }
+
+      .badge-top {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--forest);
+        background: var(--lime);
+        padding: 2px 9px;
+        border-radius: 99px;
+        margin-bottom: 8px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
       h1 {
-        text-align: center;
-        font-size: 1.6rem;
-        margin: 10px 0 25px 0;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      header p {
+        color: #cbe0c4;
+        font-size: 14px;
+        margin-top: 2px;
+      }
+
+      section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 18px;
+        margin-bottom: 14px;
+        box-shadow: var(--shadow-sm);
+      }
+
+      #note {
+        background: var(--amber-bg);
+        color: var(--amber-text);
+        border: 1px solid var(--amber-border);
+        border-radius: var(--radius-md);
+        padding: 11px 14px;
+        margin-bottom: 14px;
+        font-size: 14px;
+        font-weight: 600;
         display: flex;
         align-items: center;
+        gap: 8px;
+        animation: slideDown 0.2s ease-out;
+      }
+
+      #note:empty {
+        display: none;
+      }
+
+      button,
+      input {
+        font: inherit;
+        border-radius: var(--radius-sm);
+        min-height: 46px;
+        transition:
+          transform 0.1s ease,
+          background-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+
+      button {
+        background: var(--lime);
+        color: var(--forest);
+        border: 0;
+        font-weight: 700;
+        padding: 10px 16px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 6px;
       }
-      .input-group {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-bottom: 20px;
-        padding: 15px;
-        background: var(--light);
-        border-radius: 10px;
-        border: 1px solid #e1e4e8;
+
+      button:hover:not(:disabled) {
+        background: var(--lime-hover);
       }
+
+      button:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid var(--border);
+        background: var(--surface-soft);
+        color: var(--text);
+        margin-top: 6px;
+      }
+
+      input:focus {
+        background: #fff;
+        border-color: var(--forest-mid);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(26, 79, 70, 0.14);
+      }
+
+      label {
+        display: block;
+        margin: 14px 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
       .row {
         display: flex;
         gap: 10px;
-        width: 100%;
-        align-items: center;
       }
-      select,
-      input {
+
+      .row > * {
         flex: 1;
-        padding: 12px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 16px !important;
-        background: white;
+        min-width: 0;
       }
-      .btn-back {
-        background: #95a5a6;
-        color: white;
-        border: none;
-        padding: 0 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        height: 48px;
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-      .btn-add {
-        background: var(--primary);
-        color: white;
-        border: none;
-        padding: 15px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
+
+      .wide {
         width: 100%;
-        font-weight: bold;
+        margin-top: 12px;
       }
-      .player-pool {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 12px;
+
+      .quiet {
+        background: #edf2ec;
+        color: var(--text);
+      }
+
+      .quiet:hover:not(:disabled) {
+        background: #e1e9e0;
+      }
+
+      .tabs {
+        background: #eaf0e8;
+        border-radius: var(--radius-md);
+        padding: 4px;
+        margin-bottom: 6px;
+      }
+
+      .tabs button {
+        background: transparent;
+        color: var(--muted);
+        min-height: 40px;
+        border-radius: 10px;
+      }
+
+      .tabs button[aria-pressed="true"] {
         background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        min-height: 120px;
-        max-height: 200px;
-        overflow-y: auto;
+        color: var(--forest);
+        box-shadow: 0 2px 6px rgba(16, 55, 49, 0.1);
       }
-      .tag {
-        background: #f0f7ff;
-        border: 1px solid #d1e9ff;
-        padding: 6px 15px;
-        border-radius: 8px;
+
+      .room-header {
         display: flex;
         align-items: center;
-        gap: 5px;
-        font-size: 0.95rem;
+        justify-content: space-between;
+        gap: 12px;
       }
-      .btn-del {
-        color: var(--danger);
-        background: none;
-        border: none;
-        font-weight: bold;
-        cursor: pointer;
-        font-size: 1.2rem;
-        line-height: 1;
+
+      .num {
+        font:
+          800 34px/1.1 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        letter-spacing: 0.1em;
+        color: var(--forest);
+        font-variant-numeric: tabular-nums;
+        margin-top: 2px;
       }
-      .setting-row {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        margin-top: 15px;
+
+      #count {
+        font-size: 14px;
+        color: var(--muted);
+        font-weight: 600;
+        margin-top: 6px;
       }
-      .setting-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .setting-group label {
-        font-weight: bold;
-        color: #444;
-      }
-      .court-card {
-        background: #fbfdff;
-        border: 1px solid #ddecff;
-        border-top: 6px solid var(--accent);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-      }
-      .court-header {
-        font-weight: bold;
-        color: var(--accent);
-        font-size: 1.1rem;
-        margin-bottom: 15px;
-        border-bottom: 1px solid #f0f0f0;
-        padding-bottom: 10px;
-      }
-      .match-display {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
-        gap: 15px;
-        text-align: center;
-        font-size: 1.2rem;
-        margin: 15px 0;
-      }
-      .team b {
-        color: var(--primary);
-        display: block;
-        line-height: 1.4;
-      }
-      .btn-finish {
-        background: var(--success);
-        color: white;
-        border: none;
-        padding: 16px;
-        border-radius: 8px;
-        width: 100%;
-        font-weight: bold;
-        cursor: pointer;
-        margin-top: 15px;
-        font-size: 1rem;
-      }
-      .rest-box {
-        background: #fff3e0;
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #ffe0b2;
-        margin-top: 25px;
-      }
-      .waiting-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 10px;
-      }
-      .waiting-tag {
-        background: white;
-        padding: 5px 10px;
-        border-radius: 6px;
-        border: 1px solid #ffd180;
-        font-size: 0.9rem;
-      }
-      .stats-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;
-        margin-top: 20px;
-        background: white;
-        border-radius: 8px;
+
+      #ticket {
+        position: relative;
+        background: linear-gradient(135deg, var(--forest) 0%, #1d574d 100%);
+        color: #fff;
+        border-radius: 16px;
+        padding: 18px 22px;
+        margin: 14px 0 18px;
+        border-left: 6px solid var(--lime);
+        box-shadow: 0 8px 20px -6px rgba(16, 55, 49, 0.35);
         overflow: hidden;
       }
-      .stats-table th {
-        background: #f8f9fa;
-        padding: 12px 5px;
-        border-bottom: 2px solid #dee2e6;
+
+      #ticket::before,
+      #ticket::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 18px;
+        height: 18px;
+        background: var(--surface);
+        border-radius: 50%;
+        transform: translateY(-50%);
       }
-      .stats-table td {
-        padding: 12px 5px;
-        border: 1px solid #ddd;
-        text-align: center;
+
+      #ticket::before {
+        left: -11px;
       }
-      .status-on {
-        color: var(--success);
-        font-weight: bold;
+      #ticket::after {
+        right: -11px;
       }
-      .status-off {
-        color: #abb5be;
+
+      #ticket.rest {
+        background: var(--amber-bg);
+        color: var(--amber-text);
+        border-left-color: var(--amber-border);
+        border: 1px solid #f0cf86;
+        border-left-width: 6px;
+        box-shadow: none;
       }
-      .btn-start {
-        background: var(--accent);
-        width: 100%;
-        padding: 18px;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-weight: bold;
-        font-size: 1.2rem;
-        margin-top: 10px;
+
+      #ticket.waiting {
+        background: #eef4f6;
+        color: #244852;
+        border-left-color: #6ea3b0;
+        box-shadow: none;
       }
-      .btn-reset {
-        background: #f8f9fa;
-        color: var(--danger);
-        border: 1px solid var(--danger);
-        width: 100%;
-        padding: 12px;
+
+      #ticket small {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        opacity: 0.85;
+      }
+
+      #mine {
+        display: block;
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        margin-top: 2px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      h2 {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--forest);
+      }
+
+      .group {
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 13px;
+        margin-bottom: 10px;
+        animation: popIn 0.25s ease-out;
+      }
+
+      .group:last-child {
+        margin-bottom: 0;
+      }
+
+      .group.is-rest {
+        background: #fcfaf4;
+        border-color: #eadcb9;
+      }
+
+      .group-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .court-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--forest);
+        background: #e2ede3;
+        padding: 3px 10px;
         border-radius: 8px;
-        margin-top: 30px;
-        font-weight: bold;
+      }
+
+      .group.is-rest .court-badge {
+        background: #f5e6c4;
+        color: var(--amber-text);
+      }
+
+      .group-count {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      .names {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .tag {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        background: #fff;
+        border: 1px solid #dfe7df;
+        border-radius: 10px;
+        padding: 8px 9px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      }
+
+      .tag.is-me {
+        background: #f2fbe0;
+        border-color: #a5d43b;
+        color: var(--forest);
+        font-weight: 800;
+      }
+
+      .tag-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+      }
+
+      .tag-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+
+      .play-count {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        background: #eef3ee;
+        padding: 2px 5px;
+        border-radius: 5px;
+      }
+
+      .tag.is-me .play-count {
+        background: #dff0b8;
+        color: var(--forest);
+      }
+
+      .kick {
+        min-height: 24px;
+        height: 24px;
+        padding: 0 6px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--danger);
+        background: var(--danger-bg);
+        border-radius: 6px;
+      }
+
+      .kick:hover:not(:disabled) {
+        background: #f9dfdc;
+      }
+
+      .manual-add {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px dashed var(--border);
+      }
+
+      .manual-add input {
+        margin-top: 0;
+        min-height: 42px;
+        font-size: 14px;
+      }
+
+      .manual-add button {
+        min-height: 42px;
+        padding: 0 14px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      #draw {
+        min-height: 52px;
+        font-size: 17px;
+        margin-top: 16px;
+        box-shadow: 0 4px 12px rgba(16, 55, 49, 0.12);
+      }
+
+      #leave {
+        color: var(--danger);
+        background: #fff;
+        border: 1px solid #ebd5d2;
+        margin-top: 4px;
+      }
+
+      #leave:hover:not(:disabled) {
+        background: var(--danger-bg);
+      }
+
+      small.label-hint {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+      }
+
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid #498779;
+        outline-offset: 2px;
+      }
+
+      @keyframes popIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   </head>
   <body>
-    <div class="container">
-      <h1 id="title">🏸 羽球分組系統</h1>
+    <main>
+      <header>
+        <span class="badge-top">BADMINTON MATCH</span>
+        <h1>羽球分場</h1>
+        <p>四人一場，公平輪休自由配對</p>
+      </header>
 
-      <div id="setupView">
-        <details open>
-          <summary style="font-weight: bold; cursor: pointer; padding: 5px 0">
-            👥 球員管理 (<span id="pCount">0</span>人)
-          </summary>
-          <div class="input-group">
-            <div class="row">
-              <select id="pSelect" onchange="toggleCustom(this)">
-                <option value="">選擇人員...</option>
-                <option value="Apple">Apple</option>
-                <option value="Bonnie">Bonnie</option>
-                <option value="Chloe">Chloe</option>
-                <option value="Jamie">Jamie</option>
-                <option value="Momo">Momo</option>
-                <option value="Nora">Nora</option>
-                <option value="Reno">Reno</option>
-                <option value="Richard">Richard</option>
-                <option value="Sally">Sally</option>
-                <option value="Sam">Sam</option>
-                <option value="Sasha">Sasha</option>
-                <option value="Vivian">Vivian</option>
-                <option value="小甫">小甫</option>
-                <option value="_custom_">其他人員 (手動輸入)</option>
-              </select>
-              <input
-                type="text"
-                id="cInput"
-                placeholder="請輸入姓名"
-                style="display: none"
-              />
-              <button
-                id="backBtn"
-                class="btn-back"
-                style="display: none"
-                onclick="resetUI()"
-              >
-                ← 返回
-              </button>
-            </div>
-            <button class="btn-add" onclick="addPlayer()">＋ 加入名單</button>
-          </div>
-          <div class="player-pool" id="pPool"></div>
-          <button
-            class="btn-reset"
-            style="
-              margin-top: 0;
-              margin-bottom: 20px;
-              border-color: #ccc;
-              color: #666;
-            "
-            onclick="clearAllNames()"
-          >
-            🗑️ 清空成員名單
-          </button>
-          <div class="setting-row">
-            <div class="setting-group">
-              <label for="courtQty">場地數</label>
-              <input type="number" id="courtQty" value="2" min="1" />
-            </div>
-          </div>
-        </details>
-        <button onclick="initSystem()" class="btn-start">
-          🚀 開始分組抽籤
-        </button>
-      </div>
+      <p id="note" role="status"></p>
 
-      <div id="mainView" style="display: none">
-        <div id="courtsArea"></div>
-        <div class="rest-box">
-          <strong>☕ 休息名單 (優先上場排序)：</strong>
-          <div id="waitingArea" class="waiting-list"></div>
+      <section id="lobby">
+        <div class="row tabs">
+          <button type="button" id="create">建立房間</button>
+          <button type="button" id="join">加入房間</button>
         </div>
-        <table class="stats-table">
-          <thead>
-            <tr>
-              <th>球員</th>
-              <th>總場數</th>
-              <th>連上</th>
-              <th>連休</th>
-              <th>狀態</th>
-            </tr>
-          </thead>
-          <tbody id="pStats"></tbody>
-        </table>
-        <button onclick="location.reload()" class="btn-reset">
-          結束活動並重置數據
-        </button>
+        <form id="form">
+          <label
+            >你的暱稱
+            <input
+              id="name"
+              maxlength="16"
+              placeholder="輸入球友暱稱"
+              required
+            />
+          </label>
+          <div id="settings" class="row">
+            <label
+              >預計人數
+              <input
+                id="cap"
+                type="number"
+                min="4"
+                max="100"
+                value="13"
+                required
+              />
+            </label>
+            <label
+              >場地數
+              <input
+                id="courts"
+                type="number"
+                min="1"
+                max="25"
+                value="3"
+                required
+              />
+            </label>
+          </div>
+          <label id="roomField"
+            >六位數房號
+            <input
+              id="code"
+              inputmode="numeric"
+              pattern="[0-9]{6}"
+              maxlength="6"
+              placeholder="例如：123456"
+              required
+            />
+          </label>
+          <button id="enter" class="wide">建立房間</button>
+        </form>
+      </section>
+
+      <div id="inside" hidden>
+        <section>
+          <div class="room-header">
+            <div>
+              <small class="label-hint">房間代碼</small>
+              <div id="number" class="num"></div>
+            </div>
+            <button type="button" id="share" class="quiet">分享連結</button>
+          </div>
+          <p id="count"></p>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <h2 id="round"></h2>
+          </div>
+
+          <div id="ticket">
+            <small>你這一輪的籤位</small>
+            <strong id="mine"></strong>
+          </div>
+
+          <div id="groups"></div>
+
+          <div id="manualBox" class="manual-add" hidden>
+            <input
+              id="manualName"
+              maxlength="16"
+              placeholder="代加現場球友暱稱…"
+            />
+            <button type="button" id="manualAdd" class="quiet">＋ 新增</button>
+          </div>
+
+          <button type="button" id="draw" class="wide"></button>
+        </section>
+
+        <button type="button" id="leave" class="wide"></button>
       </div>
-    </div>
+    </main>
 
     <script>
-      let names =
-        JSON.parse(localStorage.getItem("badminton_names_simple")) || [];
-      let players = [];
-      let courts = [];
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const prefix = "tw-badminton-club-v3-";
+      let host = true,
+        peer = null,
+        uplink = null,
+        room = null,
+        me = "",
+        timer,
+        leaving = false,
+        wakeLock = null;
+      const links = new Map();
 
-      window.onload = () => updatePool();
+      const note = (text) => {
+        $("note").textContent = text;
+      };
 
-      function saveToLocal() {
-        localStorage.setItem("badminton_names_simple", JSON.stringify(names));
-      }
-      function toggleCustom(s) {
-        if (s.value === "_custom_") {
-          s.style.display = "none";
-          document.getElementById("cInput").style.display = "block";
-          document.getElementById("backBtn").style.display = "block";
-          document.getElementById("cInput").focus();
+      window.addEventListener("beforeunload", (e) => {
+        if (room && !leaving) {
+          e.preventDefault();
+          e.returnValue = "";
         }
-      }
-      function resetUI() {
-        const s = document.getElementById("pSelect");
-        s.style.display = "block";
-        s.value = "";
-        document.getElementById("cInput").style.display = "none";
-        document.getElementById("backBtn").style.display = "none";
-      }
-      function addPlayer() {
-        const sel = document.getElementById("pSelect");
-        const inp = document.getElementById("cInput");
-        let n = inp.style.display === "block" ? inp.value.trim() : sel.value;
-        if (n && !names.includes(n)) {
-          names.push(n);
-          if (inp.style.display === "block") inp.value = "";
-          saveToLocal();
-          updatePool();
-        }
-      }
-      function delPlayer(n) {
-        names = names.filter((i) => i !== n);
-        saveToLocal();
-        updatePool();
-      }
-      function updatePool() {
-        document.getElementById("pCount").innerText = names.length;
-        document.getElementById("pPool").innerHTML = [...names]
-          .sort((a, b) => a.localeCompare(b, "zh-TW"))
-          .map(
-            (n) =>
-              `<div class="tag">${n}<button class="btn-del" onclick="delPlayer('${n}')">×</button></div>`,
-          )
-          .join("");
-      }
+      });
 
-      function initSystem() {
-        const cQty = parseInt(document.getElementById("courtQty").value);
-        if (names.length < 4 * cQty)
-          return alert(`人數不足！${cQty} 個場地至少需要 ${4 * cQty} 人`);
-
-        players = names.map((n) => ({
-          name: n,
-          played: 0,
-          onStreak: 0,
-          restStreak: 0,
-          status: "idle",
-          history: {},
-        }));
-
-        courts = Array.from({ length: cQty }, (_, i) => ({
-          id: i + 1,
-          users: [],
-        }));
-        document.getElementById("setupView").style.display = "none";
-        document.getElementById("mainView").style.display = "block";
-        document.getElementById("title").innerText = "🏸 排場系統運作中";
-        drawGroups(true);
-      }
-
-      function pickPlayersForCourt(count) {
-        let selected = [];
-        // 這裡只過濾掉「已經被本輪選中場地」的人
-        let pool = players.filter((p) => !p.tempPicked);
-
-        console.log(`--- ⚖️ 權重計算 (挑選 ${count} 人) ---`);
-
-        for (let i = 0; i < count; i++) {
-          if (pool.length === 0) break;
-
-          let candidates = pool.map((p) => {
-            let baseRand = Math.random() * 150; // 稍微調低隨機影響
-            let restScore = p.restStreak * 70;
-            let onStreakScore = -(p.onStreak * 120); // 大幅提高連打懲罰
-            let playedScore = -(p.played * 30);
-            let guaranteeScore =
-              p.restStreak >= 3 ? 5000 + p.restStreak * 100 : 0;
-
-            let historyPenalty = 0;
-            selected.forEach((s) => {
-              let metTimes = p.history[s.name] || 0;
-              historyPenalty -= metTimes * 150;
-            });
-
-            let finalScore =
-              baseRand +
-              restScore +
-              onStreakScore +
-              playedScore +
-              guaranteeScore +
-              historyPenalty;
-
-            return {
-              name: p.name,
-              player: p,
-              finalScore: finalScore,
-              detail: `隨機:${baseRand.toFixed(0)}, 休:${restScore}, 連打罰:${onStreakScore}, 保送:${guaranteeScore}, 對戰罰:${historyPenalty}`,
-            };
-          });
-
-          candidates.sort((a, b) => b.finalScore - a.finalScore);
-          let picked = candidates[0].player;
-          picked.tempPicked = true; // 標記為本輪已選中
-
-          selected.push(picked);
-          pool = pool.filter((p) => p !== picked);
-        }
-        return selected;
-      }
-
-      function drawGroups(isWholeRefresh) {
-        // 重置本輪挑選標記
-        players.forEach((p) => (p.tempPicked = false));
-
-        if (isWholeRefresh) {
-          // 全場重抽時，原本的人視為「剛從場上下來」以維持連打計算
-          courts.forEach((c) => {
-            let newUsers = pickPlayersForCourt(4);
-            // 先暫存新名單，不直接覆蓋，避免 updateStats 抓不到舊狀態
-            c.nextUsers = newUsers;
-          });
-
-          // 更新名單
-          courts.forEach((c) => {
-            c.users = c.nextUsers;
-            delete c.nextUsers;
-          });
-        }
-
-        updateStats();
-        render();
-      }
-
-      function finishOneCourt(cId) {
-        players.forEach((p) => (p.tempPicked = false));
-        const court = courts.find((c) => c.id === cId);
-
-        // 標記其他球場正在打的人，讓他們不能被選中
-        courts.forEach((c) => {
-          if (c.id !== cId) {
-            c.users.forEach((u) => {
-              let p = players.find((pl) => pl.name === u.name);
-              if (p) p.tempPicked = true;
+      async function keepAwake() {
+        try {
+          if ("wakeLock" in navigator && !wakeLock) {
+            wakeLock = await navigator.wakeLock.request("screen");
+            wakeLock.addEventListener("release", () => {
+              wakeLock = null;
             });
           }
-        });
+        } catch {}
+      }
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && room) keepAwake();
+      });
 
-        let nextUsers = pickPlayersForCourt(4);
-        if (nextUsers.length < 4) return alert("可用球員不足！");
-
-        court.users = nextUsers;
-        updateStats();
-        render();
+      function mode(create) {
+        host = create;
+        $("create").setAttribute("aria-pressed", create);
+        $("join").setAttribute("aria-pressed", !create);
+        $("settings").hidden = !create;
+        $("cap").disabled = $("courts").disabled = !create;
+        $("roomField").hidden = $("code").disabled = create;
+        $("enter").textContent = create ? "建立房間" : "加入房間";
       }
 
-      function updateStats() {
-        const allOnCourtNames = courts.flatMap((c) =>
-          c.users.map((u) => u.name),
-        );
+      function busy(value) {
+        for (const id of ["enter", "create", "join"]) $(id).disabled = value;
+      }
 
-        // 1. 更新對戰歷史
-        courts.forEach((c) => {
-          if (c.users.length === 4) {
-            c.users.forEach((p) => {
-              c.users.forEach((target) => {
-                if (p.name !== target.name) {
-                  p.history[target.name] = (p.history[target.name] || 0) + 1;
-                }
-              });
-            });
-          }
-        });
+      function reset(text) {
+        clearTimeout(timer);
+        const old = peer;
+        peer = null;
+        uplink = null;
+        room = null;
+        leaving = false;
+        if (old) old.destroy();
+        if (wakeLock) {
+          wakeLock.release().catch(() => {});
+          wakeLock = null;
+        }
+        links.clear();
+        busy(false);
+        $("lobby").hidden = false;
+        $("inside").hidden = true;
+        note(text);
+      }
 
-        // 2. 更新狀態與連打次數 (關鍵修復)
-        players.forEach((p) => {
-          const isNowPlaying = allOnCourtNames.includes(p.name);
+      function randomKey() {
+        return Array.from(crypto.getRandomValues(new Uint8Array(16)), (n) =>
+          n.toString(16).padStart(2, "0"),
+        ).join("");
+      }
 
-          if (isNowPlaying) {
-            if (p.status === "playing") {
-              p.onStreak++; // 真的連打了
-            } else {
-              p.onStreak = 1; // 剛上場
-            }
-            p.played++;
-            p.restStreak = 0;
-            p.status = "playing";
-          } else {
-            p.onStreak = 0;
-            p.restStreak++;
-            p.status = "idle";
-          }
-          p.tempPicked = false; // 清除暫存標記
-        });
+      function shuffled(items) {
+        const result = [...items];
+        for (let i = result.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [result[i], result[j]] = [result[j], result[i]];
+        }
+        return result;
       }
 
       function render() {
-        let html = courts
-          .map((c) => {
-            if (c.users.length < 4)
-              return `<div class="court-card">📍 場地 ${c.id}<br>人數不足</div>`;
-            const btn = `<button class="btn-finish" onclick="finishOneCourt(${c.id})">✅ 結束並換人</button>`;
-            let d = [...c.users];
-            return `
-        <div class="court-card">
-          <div class="court-header">📍 場地 ${c.id}</div>
-          <div class="match-display">
-            <div class="team"><b>${d[0].name}</b><b>${d[1].name}</b></div>
-            <div style="color:#aaa; font-style:italic;">VS</div>
-            <div class="team"><b>${d[2].name}</b><b>${d[3].name}</b></div>
-          </div>
-          ${btn}
-        </div>`;
-          })
-          .join("");
+        $("lobby").hidden = true;
+        $("inside").hidden = false;
+        $("number").textContent = room.code;
+        $("count").textContent =
+          `已加入 ${room.players.length}／${room.cap} 人 · ${room.courts} 面場地`;
+        $("round").textContent = room.round
+          ? `第 ${room.round} 輪分組`
+          : "已加入的球友";
 
-        if (players.length > 0) {
-          html += `<button class="btn-start" style="background:#66cf36; margin-bottom:20px;" onclick="drawGroups(true)">🔄 全場打亂重抽</button>`;
+        const mine = room.players.find((p) => p.id === me)?.court || "";
+        const ticket = $("ticket");
+        ticket.hidden = !room.round;
+        ticket.classList.toggle("rest", mine === "休息");
+        ticket.classList.toggle(
+          "waiting",
+          mine === "下輪加入" || mine === "等待抽籤",
+        );
+        $("mine").textContent = mine === "下輪加入" ? "下輪加入抽籤" : mine;
+
+        $("manualBox").hidden = !host;
+        $("draw").hidden = !host;
+        $("draw").disabled = room.players.length < 4;
+        $("draw").textContent = room.round
+          ? "結束本輪 · 抽下一輪"
+          : "開始第一輪抽籤";
+        $("leave").textContent = host ? "結束並關閉房間" : "退出房間";
+        $("leave").disabled = leaving;
+
+        const groups = new Map();
+        for (const p of room.players) {
+          if (!groups.has(p.court)) groups.set(p.court, []);
+          groups.get(p.court).push(p);
         }
 
-        document.getElementById("courtsArea").innerHTML = html;
-        document.getElementById("waitingArea").innerHTML =
-          players
-            .filter((p) => p.status === "idle")
-            .sort((a, b) => b.restStreak - a.restStreak)
-            .map(
-              (p) =>
-                `<span class="waiting-tag">${p.name} <small>(休${p.restStreak})</small></span>`,
-            )
-            .join("") || "無";
+        $("groups").replaceChildren();
+        const sortedCourts = [...groups.keys()].sort(
+          (a, b) =>
+            Number(b.startsWith("場地")) - Number(a.startsWith("場地")) ||
+            a.localeCompare(b),
+        );
 
-        document.getElementById("pStats").innerHTML = players
-          .sort((a, b) => b.played - a.played || b.restStreak - a.restStreak)
-          .map((p) => {
-            let sClass = p.status === "playing" ? "status-on" : "status-off";
-            let sText = p.status === "playing" ? "🏸 上場" : "休息";
-            return `<tr><td>${p.name}</td><td>${p.played}</td><td>${p.onStreak}</td><td>${p.restStreak}</td><td class="${sClass}">${sText}</td></tr>`;
-          })
-          .join("");
-      }
+        for (const court of sortedCourts) {
+          const group = document.createElement("div");
+          const titleRow = document.createElement("div");
+          const badge = document.createElement("span");
+          const countLabel = document.createElement("span");
+          const names = document.createElement("div");
 
-      function clearAllNames() {
-        if (confirm("確定要清空所有成員名單嗎？")) {
-          names = [];
-          saveToLocal();
-          updatePool();
+          group.className = "group" + (court === "休息" ? " is-rest" : "");
+          titleRow.className = "group-title";
+          badge.className = "court-badge";
+          countLabel.className = "group-count";
+          names.className = "names";
+
+          badge.textContent = court;
+          countLabel.textContent = `${groups.get(court).length} 人`;
+          titleRow.append(badge, countLabel);
+
+          for (const p of groups.get(court)) {
+            const tag = document.createElement("div");
+            const nameSpan = document.createElement("span");
+            const metaSpan = document.createElement("span");
+
+            tag.className = "tag" + (p.id === me ? " is-me" : "");
+            nameSpan.className = "tag-name";
+            nameSpan.textContent = p.name + (p.id === me ? "（你）" : "");
+            metaSpan.className = "tag-meta";
+
+            if (room.round > 0) {
+              const playBadge = document.createElement("span");
+              playBadge.className = "play-count";
+              playBadge.textContent = `${p.played ?? 0}場`;
+              metaSpan.append(playBadge);
+            }
+
+            if (host && p.id !== me) {
+              const kick = document.createElement("button");
+              kick.type = "button";
+              kick.className = "kick";
+              kick.textContent = "移出";
+              kick.setAttribute("aria-label", "移出" + p.name);
+              kick.onclick = () => {
+                if (confirm(`確定將「${p.name}」移出房間？`)) remove(p, true);
+              };
+              metaSpan.append(kick);
+            }
+
+            tag.append(nameSpan, metaSpan);
+            names.append(tag);
+          }
+          group.append(titleRow, names);
+          $("groups").append(group);
         }
       }
+
+      function broadcast() {
+        render();
+        const state = {
+          ...room,
+          players: room.players.map(({ id, name, court, played }) => ({
+            id,
+            name,
+            court,
+            played,
+          })),
+        };
+        for (const [id, link] of links) {
+          if (link.open) link.send({ type: "state", me: id, state });
+        }
+      }
+
+      function remove(p, kicked) {
+        if (!host || p.id === me) return;
+        room.players = room.players.filter((person) => person.id !== p.id);
+        const link = links.get(p.id);
+        links.delete(p.id);
+        if (link?.open)
+          link.send({
+            type: "end",
+            text: kicked ? "房主已將你移出房間。" : "你已退出房間。",
+          });
+        broadcast();
+        note(`${p.name} 已離開房間。`);
+      }
+
+      function receive(link) {
+        let member = null;
+        link.on("error", () => {});
+        link.on("close", () => {
+          if (member && links.get(member.id) === link) links.delete(member.id);
+        });
+        link.on("data", (msg) => {
+          if (!room || !host || leaving) return;
+          if (member) {
+            if (msg?.type === "leave" && links.get(member.id) === link)
+              remove(member, false);
+            return;
+          }
+          if (msg?.type !== "join") return;
+          const key = String(msg.key || ""),
+            name = String(msg.name || "").trim();
+          let p = room.players.find(
+              (person) => person.key === key && person.id !== me,
+            ),
+            problem = "";
+          if (!/^[a-f0-9]{32}$/.test(key) || !name || name.length > 16)
+            problem = "加入資料無效。";
+          else if (!p && room.players.length >= room.cap)
+            problem = "房間人數已滿。";
+          else if (!p && room.players.some((person) => person.name === name))
+            problem = "暱稱與現有球友重複，請換一個。";
+
+          if (problem) {
+            link.send({ type: "end", text: problem });
+            return;
+          }
+          if (!p) {
+            const minPlayed = room.players.length
+              ? Math.min(...room.players.map((person) => person.played))
+              : 0;
+            p = {
+              id: randomKey(),
+              key,
+              name,
+              court: room.round ? "下輪加入" : "等待抽籤",
+              played: minPlayed,
+              streak: 0,
+              restStreak: 0,
+            };
+            room.players.push(p);
+          }
+          member = p;
+          const old = links.get(p.id);
+          links.set(p.id, link);
+          if (old && old !== link) old.close();
+          broadcast();
+        });
+      }
+
+      function addManualPlayer() {
+        if (!host || !room || leaving) return;
+        const input = $("manualName");
+        const name = input.value.trim();
+        if (!name) return note("請輸入要新增的球友暱稱。");
+        if (room.players.length >= room.cap)
+          return note("已達房間預計人數上限。");
+        if (room.players.some((p) => p.name === name))
+          return note("暱稱重複，請加上編號或換個名字。");
+
+        const minPlayed = room.players.length
+          ? Math.min(...room.players.map((person) => person.played))
+          : 0;
+        room.players.push({
+          id: randomKey(),
+          key: "",
+          name,
+          court: room.round ? "下輪加入" : "等待抽籤",
+          played: minPlayed,
+          streak: 0,
+          restStreak: 0,
+        });
+        input.value = "";
+        note("");
+        broadcast();
+      }
+
+      $("manualAdd").onclick = addManualPlayer;
+      $("manualName").onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addManualPlayer();
+        }
+      };
+
+      $("create").onclick = () => {
+        mode(true);
+        note("");
+      };
+      $("join").onclick = () => {
+        mode(false);
+        note("");
+      };
+
+      const invite = new URL(location.href).searchParams.get("room") || "";
+      mode(!/^\d{6}$/.test(invite));
+      if (!host) $("code").value = invite;
+
+      $("form").onsubmit = (e) => {
+        e.preventDefault();
+        if (peer) return;
+        const name = $("name").value.trim();
+        if (!name) return note("請輸入暱稱。");
+        const code = host
+          ? String(100000 + Math.floor(Math.random() * 900000))
+          : $("code").value;
+
+        try {
+          if (typeof Peer === "undefined")
+            return note("連線元件載入失敗，請確認網路後重新整理。");
+          const storage = prefix + code;
+          let key = "";
+          if (!host) {
+            key = sessionStorage.getItem(storage) || randomKey();
+            sessionStorage.setItem(storage, key);
+          }
+          const current = host ? new Peer(prefix + code) : new Peer();
+          peer = current;
+          busy(true);
+          note("正在建立連線…");
+          timer = setTimeout(() => {
+            if (peer === current && !room)
+              reset("連線逾時，請確認房號與網路狀態。");
+          }, 20000);
+
+          current.on("error", (err) => {
+            if (peer !== current) return;
+            const msg =
+              err.type === "peer-unavailable"
+                ? "找不到此房間，請確認六位數房號是否正確。"
+                : "連線發生異常，請重試。";
+            if (!room) reset(msg);
+            else note(msg);
+          });
+
+          current.on("disconnected", () => {
+            if (peer === current && room && host && !current.destroyed) {
+              note("網路波動，正在恢復入房連線…");
+              current.reconnect();
+            }
+          });
+
+          current.on("connection", (link) => {
+            if (host && room) receive(link);
+            else link.close();
+          });
+
+          current.on("open", () => {
+            if (peer !== current) return;
+            if (host) {
+              clearTimeout(timer);
+              note("");
+              if (room) return;
+              me = randomKey();
+              room = {
+                code,
+                cap: Number($("cap").value),
+                courts: Number($("courts").value),
+                round: 0,
+                players: [
+                  {
+                    id: me,
+                    name,
+                    court: "等待抽籤",
+                    played: 0,
+                    streak: 0,
+                    restStreak: 0,
+                  },
+                ],
+              };
+              keepAwake();
+              render();
+              return;
+            }
+            const link = current.connect(prefix + code, { reliable: true });
+            uplink = link;
+            link.on("open", () => link.send({ type: "join", key, name }));
+            link.on("data", (msg) => {
+              if (peer !== current) return;
+              if (msg?.type === "end") {
+                reset(msg.text);
+                return;
+              }
+              if (msg?.type === "state") {
+                clearTimeout(timer);
+                room = msg.state;
+                me = msg.me;
+                note("");
+                keepAwake();
+                render();
+              }
+            });
+            const lost = () => {
+              if (peer === current)
+                reset("與房主的連線已中斷，可直接點擊加入重新連線。");
+            };
+            link.on("close", lost);
+            link.on("error", lost);
+          });
+        } catch {
+          reset("無法建立連線，請使用可連網的手機瀏覽器。");
+        }
+      };
+
+      $("draw").onclick = () => {
+        if (!host || !room || leaving) return;
+        const slots =
+          4 * Math.min(room.courts, Math.floor(room.players.length / 4));
+        if (slots < 4) return note("至少需要 4 人才能開始分場。");
+        if (room.round && !confirm("確定結束本輪並重新抽下一輪？")) return;
+
+        // 1. 上輪未上場者（restStreak > 0）：連休越多輪、總上場越少者優先上場
+        const mustPool = shuffled(
+          room.players.filter((p) => p.restStreak > 0),
+        ).sort((a, b) => b.restStreak - a.restStreak || a.played - b.played);
+        const playingFromMust = mustPool.slice(0, slots);
+
+        // 2. 上輪有上場者（restStreak === 0）：總上場越少、連打越少輪者優先續戰（打最多場者自動輪休）
+        const needed = slots - playingFromMust.length;
+        const activePool = shuffled(
+          room.players.filter((p) => p.restStreak === 0),
+        ).sort((a, b) => a.played - b.played || a.streak - b.streak);
+        const playing = shuffled([
+          ...playingFromMust,
+          ...activePool.slice(0, needed),
+        ]);
+
+        // 3. 分配場地並更新所有球友狀態
+        const playingIds = new Set(playing.map((p) => p.id));
+        playing.forEach((p, i) => {
+          p.court = "場地 " + String.fromCharCode(65 + Math.floor(i / 4));
+        });
+
+        for (const p of room.players) {
+          if (playingIds.has(p.id)) {
+            p.played++;
+            p.streak++;
+            p.restStreak = 0;
+          } else {
+            p.court = "休息";
+            p.streak = 0;
+            p.restStreak++;
+          }
+        }
+
+        room.round++;
+        note("");
+        broadcast();
+      };
+
+      $("leave").onclick = () => {
+        if (
+          !confirm(
+            host
+              ? "確定結束房間？所有球友都會離開。"
+              : "確定退出房間？你的籤位將會釋出。",
+          )
+        )
+          return;
+        if (host) {
+          leaving = true;
+          $("leave").disabled = true;
+          for (const link of links.values()) {
+            if (link.open) link.send({ type: "end", text: "房主已結束房間。" });
+          }
+          setTimeout(() => reset("房間已結束。"), 500);
+        } else if (uplink?.open) {
+          uplink.send({ type: "leave" });
+        } else {
+          reset("已離開房間。");
+        }
+      };
+
+      $("share").onclick = async () => {
+        if (location.protocol === "file:")
+          return note("請將網頁部署至 HTTPS 網站後再分享連結。");
+        const url = new URL(location.href);
+        url.searchParams.set("room", room.code);
+        try {
+          if (navigator.share) {
+            await navigator.share({
+              title: `羽球分場（房號 ${room.code}）`,
+              url: url.href,
+            });
+          } else {
+            await navigator.clipboard.writeText(url.href);
+            note("已複製房間邀請連結！");
+          }
+        } catch (e) {
+          if (e.name !== "AbortError") prompt("複製房間連結", url.href);
+        }
+      };
     </script>
   </body>
 </html>
